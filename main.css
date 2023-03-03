@@ -1,0 +1,16 @@
+body {
+    background-color: black;
+    margin: 0;
+}
+
+#canvas {
+    width: 100vw;
+    height: 100vh;
+    background-color: gray;
+    position: relative;
+}
+
+#player {
+    position: absolute;
+    background-color: blue;
+}
