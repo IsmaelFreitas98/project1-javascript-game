@@ -319,6 +319,19 @@ class Enemy {
         this.characterElm.style.left = this.positionXPix + "px";
     }
 
+    removeObject(collidablesArr) {
+        //remove spell from the spells and collidables array
+        let objectPos = collidablesArr.indexOf(this);
+        collidablesArr.splice(objectPos, 1);
+
+        //remove spell from the DOM
+        this.characterElm.remove();
+
+        //remove from memory
+        delete(this);
+
+    }
+
 
 
 }
@@ -426,7 +439,7 @@ class Spell {
 
         this.updateColliderPosition();
 
-        this.detectCollisions(collidablesArr);
+        this.detectCollisions(spellsArr, collidablesArr);
     }
 
     updateColliderPosition() {
@@ -435,7 +448,7 @@ class Spell {
         this.collider.setLimits(newLimits);
     }
 
-    detectCollisions(collidablesArr) {
+    detectCollisions(spellsArr, collidablesArr) {
         
         collidablesArr.forEach(collidable => {
             if(collidable === this) {
@@ -446,7 +459,14 @@ class Spell {
                 collidable.collider.topLimit > this.collider.bottomLimit &&
                 collidable.collider.leftLimit < this.collider.rightLimit &&
                 collidable.collider.rightLimit > this.collider.leftLimit) {
+
                     console.log(`Collision with ${collidable.collider.tag}`);
+
+                    if(collidable.collider.tag === "enemy"){
+                        collidable.removeObject(collidablesArr);
+                        this.removeSpell(spellsArr, collidablesArr)                        
+                    }
+
                 }
 
         });
