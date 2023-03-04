@@ -64,17 +64,27 @@ class Game {
 class Player {
 
     constructor(arrowsPressed, canvasOnePercentWidth, canvasOnePercentHeight) {
-        this.width = 5;
+        this.width = 3;
         this.height;
+
+        //Position in percentage of canvas
         this.positionX = 50;
         this.positionY = 50;
+        //Position in absolute units, calculated using canvas size
         this.positionXPix;
         this.positionYPix;
+
         this.playerElm;
+
+        //properties to determine the speed of movement. Vertical speed is set in proportion to the canvas ratio, so the player moves in the diagonal axis correctly, no matter the screen ratio
+        this.verticalSpeed = canvasOnePercentWidth / canvasOnePercentHeight;
         this.speed = 1;
-        this.direction;
+        
+
+        //properties to keep track of wheere the spells will shoot from, and in wich direction
         this.wandX;
         this.wandY;
+        this.direction;
 
         this.buildPlayer(arrowsPressed, canvasOnePercentWidth, canvasOnePercentHeight);
     }
@@ -88,7 +98,7 @@ class Player {
         this.playerElm = playerElm;
 
         this.width = Math.floor(this.width * canvasOnePercentWidth);
-        this.height = 1.5 * this.width;
+        this.height = 1.2 * this.width;
 
         this.playerElm.style.width = this.width + "px";
         this.playerElm.style.height = this.height + "px";
@@ -98,16 +108,17 @@ class Player {
     }
 
     move(arrowsPressed, canvasOnePercentWidth, canvasOnePercentHeight) {
+
         if(arrowsPressed.includes("ArrowUp") && arrowsPressed.length === 1){
-            this.positionY += this.speed;
+            this.positionY += this.speed * this.verticalSpeed;
         } else if(arrowsPressed.includes("ArrowUp")){
-            this.positionY += 0.7 * this.speed; //so it doesnt move faster when moving in a diagonal 
+            this.positionY += 0.7 * this.speed * this.verticalSpeed; //so it doesnt move faster when moving in a diagonal 
         }
 
         if(arrowsPressed.includes("ArrowDown")  && arrowsPressed.length === 1){
-            this.positionY -= this.speed;
+            this.positionY -= this.speed * this.verticalSpeed;
         } else if(arrowsPressed.includes("ArrowDown")){
-            this.positionY -= 0.7 * this.speed; //so it doesnt move faster when moving in a diagonal 
+            this.positionY -= 0.7 * this.speed * this.verticalSpeed; //so it doesnt move faster when moving in a diagonal 
         }
 
         if(arrowsPressed.includes("ArrowRight")  && arrowsPressed.length === 1){
@@ -220,6 +231,7 @@ class Player {
 
 class Spell {
     constructor(positionXPix, positionYPix, direction, spellsArr, canvasOnePercentWidth, canvasOnePercentHeight) {
+
         this.spellElm;
         this.positionXPix = positionXPix;
         this.positionYPix = positionYPix;
@@ -228,6 +240,7 @@ class Spell {
 
         this.direction = direction;
         this.speed = 2;
+        this.verticalSpeed = canvasOnePercentWidth / canvasOnePercentHeight;
 
         this.buildSpell(spellsArr);
     }
@@ -252,11 +265,11 @@ class Spell {
 
         switch (this.direction) {
             case "up":
-                this.positionY += this.speed;
+                this.positionY += this.speed * this.verticalSpeed;
                 break;
             
             case "down":
-                this.positionY -= this.speed;
+                this.positionY -= this.speed * this.verticalSpeed;
                 break;
 
             case "left":
@@ -269,28 +282,32 @@ class Spell {
 
             case "upLeft":
                 this.positionX -= 0.7 * this.speed;
-                this.positionY += 0.7 * this.speed;
+                this.positionY += 0.7 * this.speed * this.verticalSpeed;
                 break;
             
             case "downLeft":
                 this.positionX -= 0.7 * this.speed;
-                this.positionY -= 0.7 * this.speed;
+                this.positionY -= 0.7 * this.speed * this.verticalSpeed;
                 break;
 
             case "upRight":
                 this.positionX += 0.7 * this.speed;
-                this.positionY += 0.7 * this.speed;
+                this.positionY += 0.7 * this.speed * this.verticalSpeed;
                 break;
             
             case "downRight":
                 this.positionX += 0.7 * this.speed;
-                this.positionY -= 0.7 * this.speed;
+                this.positionY -= 0.7 * this.speed * this.verticalSpeed;
                 break;
             
             default:
                 console.log("Invalid Direction");
         }
 
+        this.updatePosition(spellsArr, canvasOnePercentWidth, canvasOnePercentHeight);
+    }
+
+    updatePosition(spellsArr, canvasOnePercentWidth, canvasOnePercentHeight) {
         this.positionXPix = Math.floor(this.positionX * canvasOnePercentWidth);
         this.positionYPix = Math.floor(this.positionY * canvasOnePercentHeight);
 
@@ -319,5 +336,7 @@ class Spell {
 
     } 
 }
+
+
 
 const myGame = new Game();
