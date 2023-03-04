@@ -17,6 +17,8 @@ class Game {
 
         this.start();
         this.placeEnemies(4);
+        console.log(this.collidablesArr);
+
     }
 
     start() {
@@ -32,8 +34,8 @@ class Game {
             } else if(event.key === "ArrowRight" && !this.arrowsPressed.includes("ArrowRight")) {
                 this.arrowsPressed.push(event.key);
             }
-            
-            
+
+
         });
 
         document.addEventListener("keyup", (event) => {
@@ -47,7 +49,7 @@ class Game {
             } else if(event.key === "ArrowRight") {
                 this.arrowsPressed.splice(this.arrowsPressed.indexOf("ArrowRight"), 1);
             }
-        
+
             //Check if spacebar was pressed to shoot spell (on keyup to avoid being called more than 1 time per press)
             if(event.code === "Space") {
                 this.player.shootSpell(this.spellsArr, this.canvasOnePercentWidth, this.canvasOnePercentHeight, this.collidablesArr);
@@ -57,11 +59,11 @@ class Game {
 
         setInterval(() => {
             this.player.move(this.arrowsPressed, this.canvasOnePercentWidth, this.canvasOnePercentHeight);
-        
+
             this.spellsArr.forEach(spell => {
                 spell.move(this.spellsArr, this.canvasOnePercentWidth, this.canvasOnePercentHeight, this.collidablesArr);
             });
-        
+
         }, 16);
 
     }
@@ -69,7 +71,7 @@ class Game {
     placeEnemies(numberOfEnemies) {
 
         for(let i = 0; i < numberOfEnemies; i++) {
-            const newEnemy = new Enemy((Math.random() * 80 + 10), (Math.random() * 80 + 10), this.canvasOnePercentWidth, this.canvasOnePercentHeight);
+            const newEnemy = new Enemy((Math.random() * 80 + 10), (Math.random() * 80 + 10), this.canvasOnePercentWidth, this.canvasOnePercentHeight, this.collidablesArr);
             this.enemiesArr.push(newEnemy);
         }
 
@@ -94,7 +96,7 @@ class Player {
         //properties to determine the speed of movement. Vertical speed is set in proportion to the canvas ratio, so the player moves in the diagonal axis correctly, no matter the screen ratio
         this.verticalSpeed = canvasOnePercentWidth / canvasOnePercentHeight;
         this.speed = 0.5;
-        
+
 
         //properties to keep track of wheere the spells will shoot from, and in wich direction
         this.wandX;
@@ -125,14 +127,14 @@ class Player {
     move(arrowsPressed, canvasOnePercentWidth, canvasOnePercentHeight) {
 
         if((this.positionYPix + this.height) < (100 * canvasOnePercentHeight - 10)){ //check if it is not at the top limit
-            
+
             if(arrowsPressed.includes("ArrowUp") && arrowsPressed.length === 1){
                 this.positionY += this.speed * this.verticalSpeed;
             } else if(arrowsPressed.includes("ArrowUp")){
-                this.positionY += 0.7 * this.speed * this.verticalSpeed; 
+                this.positionY += 0.7 * this.speed * this.verticalSpeed;
             }
 
-        }        
+        }
 
         if(this.positionYPix > 10){ //check if it's not at the bottom limit
 
@@ -142,18 +144,18 @@ class Player {
                 this.positionY -= 0.7 * this.speed * this.verticalSpeed;
             }
 
-        }        
+        }
 
         if((this.positionXPix + this.width) < (100 * canvasOnePercentWidth - 10)){ //check if it's not at the right limit of the canvas
-            
+
             if(arrowsPressed.includes("ArrowRight")  && arrowsPressed.length === 1){
                 this.positionX += this.speed;
             } else if(arrowsPressed.includes("ArrowRight")){
-                this.positionX += 0.7 * this.speed; 
+                this.positionX += 0.7 * this.speed;
             }
 
         }
-        
+
         if(this.positionXPix > 10){ // check if it's not at the left limit
 
             if(arrowsPressed.includes("ArrowLeft")  && arrowsPressed.length === 1){
@@ -163,10 +165,10 @@ class Player {
             }
 
         }
-        
+
 
         this.updatePosition(arrowsPressed, canvasOnePercentWidth, canvasOnePercentHeight);
-        
+
     }
 
     updatePosition(arrowsPressed, canvasOnePercentWidth, canvasOnePercentHeight) {
@@ -213,7 +215,7 @@ class Player {
                 this.wandX = this.positionXPix + (this.width/2);
                 this.wandY = this.positionYPix + this.height;
                 break;
-            
+
             case "down":
                 this.wandX = this.positionXPix + (this.width/2);
                 this.wandY = this.positionYPix;
@@ -223,7 +225,7 @@ class Player {
                 this.wandX = this.positionXPix;
                 this.wandY = this.positionYPix + (this.height/2);
                 break;
-            
+
             case "right":
                 this.wandX = this.positionXPix + this.width;
                 this.wandY = this.positionYPix + (this.height/2);
@@ -233,7 +235,7 @@ class Player {
                 this.wandX = this.positionXPix;
                 this.wandY = this.positionYPix + this.height;
                 break;
-            
+
             case "downLeft":
                 this.wandX = this.positionXPix;
                 this.wandY = this.positionYPix;
@@ -243,12 +245,12 @@ class Player {
                 this.wandX = this.positionXPix + this.width;
                 this.wandY = this.positionYPix + this.height;
                 break;
-            
+
             case "downRight":
                 this.wandX = this.positionXPix + this.width;
                 this.wandY = this.positionYPix;
                 break;
-            
+
             default:
                 console.log("Invalid Direction");
         }
@@ -262,8 +264,9 @@ class Player {
 
 class Enemy {
 
-    constructor(positionX, positionY, canvasOnePercentWidth, canvasOnePercentHeight) {
+    constructor(positionX, positionY, canvasOnePercentWidth, canvasOnePercentHeight, collidablesArr) {
         this.characterElm;
+        this.collider;
         this.width = 3;
         this.height;
 
@@ -277,17 +280,17 @@ class Enemy {
         //properties to determine the speed of movement. Vertical speed is set in proportion to the canvas ratio, so the character moves in the diagonal axis correctly, no matter the screen ratio
         this.verticalSpeed = canvasOnePercentWidth / canvasOnePercentHeight;
         this.speed = 1;
-        
+
 
         //properties to keep track of wheere the spells will shoot from, and in wich direction
         this.wandX;
         this.wandY;
         this.direction;
 
-        this.buildObject(canvasOnePercentWidth, canvasOnePercentHeight);
+        this.buildObject(canvasOnePercentWidth, canvasOnePercentHeight, collidablesArr);
     }
 
-    buildObject(canvasOnePercentWidth, canvasOnePercentHeight) {
+    buildObject(canvasOnePercentWidth, canvasOnePercentHeight, collidablesArr) {
         const gameCanvas = document.getElementById("canvas");
         const characterElm = document.createElement("div");
         characterElm.setAttribute("class", "enemy");
@@ -302,7 +305,9 @@ class Enemy {
         this.characterElm.style.height = this.height + "px";
 
         this.direction = "down";
-        this.updatePosition( canvasOnePercentWidth, canvasOnePercentHeight);
+        this.updatePosition(canvasOnePercentWidth, canvasOnePercentHeight);
+        this.collider = new Collider("enemy", [(this.positionYPix + this.height), this.positionYPix, this.positionXPix, (this.positionXPix + this.width)]);
+        collidablesArr.push(this);
     }
 
     updatePosition(canvasOnePercentWidth, canvasOnePercentHeight) {
@@ -312,8 +317,6 @@ class Enemy {
 
         this.characterElm.style.bottom = this.positionYPix + "px";
         this.characterElm.style.left = this.positionXPix + "px";
-
-        //this.updateDirection();
     }
 
 
@@ -331,8 +334,8 @@ class Spell {
         this.positionX = positionXPix / canvasOnePercentWidth;
         this.positionY = positionYPix / canvasOnePercentHeight;
 
-        this.width = 3;
-        this.height = 3;
+        this.width = 0.5 * canvasOnePercentWidth;
+        this.height = this.width;
 
         this.direction = direction;
         this.speed = 2;
@@ -366,7 +369,7 @@ class Spell {
             case "up":
                 this.positionY += this.speed * this.verticalSpeed;
                 break;
-            
+
             case "down":
                 this.positionY -= this.speed * this.verticalSpeed;
                 break;
@@ -374,7 +377,7 @@ class Spell {
             case "left":
                 this.positionX -= this.speed;
                 break;
-            
+
             case "right":
                 this.positionX += this.speed;
                 break;
@@ -383,7 +386,7 @@ class Spell {
                 this.positionX -= 0.7 * this.speed;
                 this.positionY += 0.7 * this.speed * this.verticalSpeed;
                 break;
-            
+
             case "downLeft":
                 this.positionX -= 0.7 * this.speed;
                 this.positionY -= 0.7 * this.speed * this.verticalSpeed;
@@ -393,12 +396,12 @@ class Spell {
                 this.positionX += 0.7 * this.speed;
                 this.positionY += 0.7 * this.speed * this.verticalSpeed;
                 break;
-            
+
             case "downRight":
                 this.positionX += 0.7 * this.speed;
                 this.positionY -= 0.7 * this.speed * this.verticalSpeed;
                 break;
-            
+
             default:
                 console.log("Invalid Direction");
         }
@@ -420,6 +423,33 @@ class Spell {
         if(this.positionX < 0 || this.positionX > 100){
             this.removeSpell(spellsArr, collidablesArr);
         }
+
+        this.updateColliderPosition();
+
+        this.detectCollisions(collidablesArr);
+    }
+
+    updateColliderPosition() {
+        const newLimits = [(this.positionYPix + this.height), this.positionYPix, this.positionXPix, (this.positionXPix + this.width)];
+
+        this.collider.setLimits(newLimits);
+    }
+
+    detectCollisions(collidablesArr) {
+        
+        collidablesArr.forEach(collidable => {
+            if(collidable === this) {
+                return;
+            }
+
+            if(collidable.collider.bottomLimit < this.collider.topLimit &&
+                collidable.collider.topLimit > this.collider.bottomLimit &&
+                collidable.collider.leftLimit < this.collider.rightLimit &&
+                collidable.collider.rightLimit > this.collider.leftLimit) {
+                    console.log(`Collision with ${collidable.collider.tag}`);
+                }
+
+        });
     }
 
     removeSpell(spellsArr, collidablesArr) {
@@ -436,7 +466,7 @@ class Spell {
         //remove from memory
         delete(this);
 
-    } 
+    }
 }
 
 class Collider {
@@ -452,27 +482,11 @@ class Collider {
         return this.tag;
     }
 
-    setCorners(limits) {
+    setLimits(limits) {
         this.topLimit = limits[0];
         this.bottomLimit = limits[1];
         this.leftLimit = limits[2];
         this.rightLimit = limits[3];
-    }
-
-    getUpLeft() {
-        return this.upLeft;
-    }
-
-    getUpRight() {
-        return this.upRight;
-    }
-
-    getDownRight() {
-        return this.DownRight;
-    }
-
-    getDownLeft() {
-        return this.DownLeft;
     }
 }
 
