@@ -1,4 +1,7 @@
-class Game {
+//GameManager-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+//Levels------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+class Level {
     constructor() {
         //to make scaling and moving elements possible
         this.gameCanvas = document.getElementById("canvas");
@@ -7,18 +10,17 @@ class Game {
         this.canvasOnePercentWidth = this.canvasWidth / 100;
         this.canvasOnePercentHeight = this.canvasHeight / 100;
 
-        //to keep track of player input
-        this.arrowsPressed = [];
-        this.player = new Player(this.arrowsPressed, this.canvasOnePercentWidth, this.canvasOnePercentHeight);
         //to keep track of the active objects in the game;
         this.spellsArr = [];
         this.enemiesArr = [];
         this.collidablesArr = [];
 
+        //to keep track of player input
+        this.arrowsPressed = [];
+        this.player = new Player(this.canvasOnePercentWidth, this.canvasOnePercentHeight, 3, 1.2, 50, 50, this.collidablesArr, this.spellsArr, 20, this.arrowsPressed);
+
         this.start();
         this.placeEnemies(4);
-        console.log(this.collidablesArr);
-
     }
 
     start() {
@@ -34,7 +36,6 @@ class Game {
             } else if(event.key === "ArrowRight" && !this.arrowsPressed.includes("ArrowRight")) {
                 this.arrowsPressed.push(event.key);
             }
-
 
         });
 
@@ -52,16 +53,16 @@ class Game {
 
             //Check if spacebar was pressed to shoot spell (on keyup to avoid being called more than 1 time per press)
             if(event.code === "Space") {
-                this.player.shootSpell(this.spellsArr, this.canvasOnePercentWidth, this.canvasOnePercentHeight, this.collidablesArr);
+                this.player.shootSpell();
                 console.log("Expeliarmus!");
             }
         });
 
         setInterval(() => {
-            this.player.move(this.arrowsPressed, this.canvasOnePercentWidth, this.canvasOnePercentHeight);
+            this.player.move();
 
             this.spellsArr.forEach(spell => {
-                spell.move(this.spellsArr, this.canvasOnePercentWidth, this.canvasOnePercentHeight, this.collidablesArr);
+                spell.move();
             });
 
         }, 16);
@@ -71,312 +72,372 @@ class Game {
     placeEnemies(numberOfEnemies) {
 
         for(let i = 0; i < numberOfEnemies; i++) {
-            const newEnemy = new Enemy((Math.random() * 80 + 10), (Math.random() * 80 + 10), this.canvasOnePercentWidth, this.canvasOnePercentHeight, this.collidablesArr);
+
+            const posX = Math.random() * 80 + 10;
+            const posY = Math.random() * 80 + 10;
+
+            const newEnemy = new Enemy(this.canvasOnePercentWidth, this.canvasOnePercentHeight, 3, 1, posX, posY, this.collidablesArr, this.spellsArr, 20);
             this.enemiesArr.push(newEnemy);
+            this.collidablesArr.push(newEnemy);
         }
 
     }
 }
 
-class Player {
-
-    constructor(arrowsPressed, canvasOnePercentWidth, canvasOnePercentHeight) {
-        this.width = 3;
+//Game Objects------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+//Inheritance Map:
+//                            -->Player
+//               --> Wizard -->
+//                            -->Enemy
+// GameObject -->
+//
+//               --> Spell
+//
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+class GameObject {
+    constructor(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, collidablesArr) {
+        //Store canvas dimension to access in methods
+        this.canvasOnePercentWidth = canvasOnePercentWidth;
+        this.canvasOnePercentHeight = canvasOnePercentHeight;
+        
+        //Object dimension in relative units
+        this.width = relativeWidth;
         this.height;
-
-        //Position in percentage of canvas
-        this.positionX = 50;
-        this.positionY = 50;
-        //Position in absolute units, calculated using canvas size
-        this.positionXPix;
-        this.positionYPix;
-
-        this.playerElm;
-
-        //properties to determine the speed of movement. Vertical speed is set in proportion to the canvas ratio, so the player moves in the diagonal axis correctly, no matter the screen ratio
-        this.verticalSpeed = canvasOnePercentWidth / canvasOnePercentHeight;
-        this.speed = 0.5;
-
-
-        //properties to keep track of wheere the spells will shoot from, and in wich direction
-        this.wandX;
-        this.wandY;
-        this.direction;
-
-        this.buildObject(arrowsPressed, canvasOnePercentWidth, canvasOnePercentHeight);
-    }
-
-    buildObject(arrowsPressed, canvasOnePercentWidth, canvasOnePercentHeight) {
-        const gameCanvas = document.getElementById("canvas");
-        const playerElm = document.createElement("div");
-        playerElm.setAttribute("id", "player");
-        gameCanvas.appendChild(playerElm);
-
-        this.playerElm = playerElm;
-
-        this.width = Math.floor(this.width * canvasOnePercentWidth);
-        this.height = this.width;
-
-        this.playerElm.style.width = this.width + "px";
-        this.playerElm.style.height = this.height + "px";
-
-        this.direction = "down";
-        this.updatePosition(arrowsPressed, canvasOnePercentWidth, canvasOnePercentHeight);
-    }
-
-    move(arrowsPressed, canvasOnePercentWidth, canvasOnePercentHeight) {
-
-        if((this.positionYPix + this.height) < (100 * canvasOnePercentHeight - 10)){ //check if it is not at the top limit
-
-            if(arrowsPressed.includes("ArrowUp") && arrowsPressed.length === 1){
-                this.positionY += this.speed * this.verticalSpeed;
-            } else if(arrowsPressed.includes("ArrowUp")){
-                this.positionY += 0.7 * this.speed * this.verticalSpeed;
-            }
-
-        }
-
-        if(this.positionYPix > 10){ //check if it's not at the bottom limit
-
-            if(arrowsPressed.includes("ArrowDown")  && arrowsPressed.length === 1){
-                this.positionY -= this.speed * this.verticalSpeed;
-            } else if(arrowsPressed.includes("ArrowDown")){
-                this.positionY -= 0.7 * this.speed * this.verticalSpeed;
-            }
-
-        }
-
-        if((this.positionXPix + this.width) < (100 * canvasOnePercentWidth - 10)){ //check if it's not at the right limit of the canvas
-
-            if(arrowsPressed.includes("ArrowRight")  && arrowsPressed.length === 1){
-                this.positionX += this.speed;
-            } else if(arrowsPressed.includes("ArrowRight")){
-                this.positionX += 0.7 * this.speed;
-            }
-
-        }
-
-        if(this.positionXPix > 10){ // check if it's not at the left limit
-
-            if(arrowsPressed.includes("ArrowLeft")  && arrowsPressed.length === 1){
-                this.positionX -= this.speed;
-            } else if(arrowsPressed.includes("ArrowLeft")){
-                this.positionX -= 0.7 * this.speed;
-            }
-
-        }
-
-
-        this.updatePosition(arrowsPressed, canvasOnePercentWidth, canvasOnePercentHeight);
-
-    }
-
-    updatePosition(arrowsPressed, canvasOnePercentWidth, canvasOnePercentHeight) {
-
-        this.positionXPix = Math.floor(this.positionX * canvasOnePercentWidth) - this.width / 2;
-        this.positionYPix = Math.floor(this.positionY * canvasOnePercentHeight) - this.height / 2;
-
-        this.playerElm.style.bottom = this.positionYPix + "px";
-        this.playerElm.style.left = this.positionXPix + "px";
-
-        this.updateDirection(arrowsPressed);
-    }
-
-    updateDirection(arrowsPressed) {
-        //Update direction for vertical and horizontal axis input
-        if(arrowsPressed.includes("ArrowUp") && arrowsPressed.length === 1) {
-            this.direction = "up";
-        } else if(arrowsPressed.includes("ArrowDown") && arrowsPressed.length === 1) {
-            this.direction = "down";
-        } else if(arrowsPressed.includes("ArrowLeft") && arrowsPressed.length === 1) {
-            this.direction = "left";
-        } else if(arrowsPressed.includes("ArrowRight") && arrowsPressed.length === 1) {
-            this.direction = "right";
-        }
-
-        //Update direction for diagonal axis input
-        if(arrowsPressed.includes("ArrowUp") && arrowsPressed.includes("ArrowLeft") && arrowsPressed.length === 2) {
-            this.direction = "upLeft";
-        } else if(arrowsPressed.includes("ArrowUp") && arrowsPressed.includes("ArrowRight") && arrowsPressed.length === 2) {
-            this.direction = "upRight";
-        } else if(arrowsPressed.includes("ArrowDown") && arrowsPressed.includes("ArrowLeft") && arrowsPressed.length === 2) {
-            this.direction = "downLeft";
-        } else if(arrowsPressed.includes("ArrowDown") && arrowsPressed.includes("ArrowRight") && arrowsPressed.length === 2) {
-            this.direction = "downRight";
-        }
-
-        //Update the position from where spells are shot
-        this.updateWandPosition();
-    }
-
-    updateWandPosition() {
-        switch (this.direction) {
-            case "up":
-                this.wandX = this.positionXPix + (this.width/2);
-                this.wandY = this.positionYPix + this.height;
-                break;
-
-            case "down":
-                this.wandX = this.positionXPix + (this.width/2);
-                this.wandY = this.positionYPix;
-                break;
-
-            case "left":
-                this.wandX = this.positionXPix;
-                this.wandY = this.positionYPix + (this.height/2);
-                break;
-
-            case "right":
-                this.wandX = this.positionXPix + this.width;
-                this.wandY = this.positionYPix + (this.height/2);
-                break;
-
-            case "upLeft":
-                this.wandX = this.positionXPix;
-                this.wandY = this.positionYPix + this.height;
-                break;
-
-            case "downLeft":
-                this.wandX = this.positionXPix;
-                this.wandY = this.positionYPix;
-                break;
-
-            case "upRight":
-                this.wandX = this.positionXPix + this.width;
-                this.wandY = this.positionYPix + this.height;
-                break;
-
-            case "downRight":
-                this.wandX = this.positionXPix + this.width;
-                this.wandY = this.positionYPix;
-                break;
-
-            default:
-                console.log("Invalid Direction");
-        }
-    }
-
-    shootSpell(spellsArr, canvasOnePercentWidth, canvasOnePercentHeight, collidablesArr) {
-        const newSpell = new Spell(this.wandX, this.wandY, this.direction, spellsArr, canvasOnePercentWidth, canvasOnePercentHeight, collidablesArr);
-    }
-
-}
-
-class Enemy {
-
-    constructor(positionX, positionY, canvasOnePercentWidth, canvasOnePercentHeight, collidablesArr) {
-        this.characterElm;
-        this.collider;
-        this.width = 3;
-        this.height;
+        this.proportion = widthHeightRatio; //width/height ratio
 
         //Position in percentage of canvas
         this.positionX = positionX;
         this.positionY = positionY;
-        //Position in absolute units, calculated using canvas size
+
+        //Position in absolute units, calculated using canvas one percent unit in pixels
         this.positionXPix;
         this.positionYPix;
 
-        //properties to determine the speed of movement. Vertical speed is set in proportion to the canvas ratio, so the character moves in the diagonal axis correctly, no matter the screen ratio
+        //Speed properties
+        this.speed;
         this.verticalSpeed = canvasOnePercentWidth / canvasOnePercentHeight;
-        this.speed = 1;
 
+        //DOM Elements
+        this.objectElm;
 
-        //properties to keep track of wheere the spells will shoot from, and in wich direction
-        this.wandX;
-        this.wandY;
-        this.direction;
-
-        this.buildObject(canvasOnePercentWidth, canvasOnePercentHeight, collidablesArr);
-    }
-
-    buildObject(canvasOnePercentWidth, canvasOnePercentHeight, collidablesArr) {
-        const gameCanvas = document.getElementById("canvas");
-        const characterElm = document.createElement("div");
-        characterElm.setAttribute("class", "enemy");
-        gameCanvas.appendChild(characterElm);
-
-        this.characterElm = characterElm;
-
-        this.width = Math.floor(this.width * canvasOnePercentWidth);
-        this.height = this.width;
-
-        this.characterElm.style.width = this.width + "px";
-        this.characterElm.style.height = this.height + "px";
-
-        this.direction = "down";
-        this.updatePosition(canvasOnePercentWidth, canvasOnePercentHeight);
-        this.collider = new Collider("enemy", [(this.positionYPix + this.height), this.positionYPix, this.positionXPix, (this.positionXPix + this.width)]);
-        collidablesArr.push(this);
-    }
-
-    updatePosition(canvasOnePercentWidth, canvasOnePercentHeight) {
-
-        this.positionXPix = Math.floor(this.positionX * canvasOnePercentWidth) - this.width / 2;
-        this.positionYPix = Math.floor(this.positionY * canvasOnePercentHeight) - this.height / 2;
-
-        this.characterElm.style.bottom = this.positionYPix + "px";
-        this.characterElm.style.left = this.positionXPix + "px";
-    }
-
-    removeObject(collidablesArr) {
-        //remove spell from the spells and collidables array
-        let objectPos = collidablesArr.indexOf(this);
-        collidablesArr.splice(objectPos, 1);
-
-        //remove spell from the DOM
-        this.characterElm.remove();
-
-        //remove from memory
-        delete(this);
-
-    }
-
-
-
-}
-
-class Spell {
-    constructor(positionXPix, positionYPix, direction, spellsArr, canvasOnePercentWidth, canvasOnePercentHeight, collidablesArr) {
-
-        this.spellElm;
+        //Since all objects will be collidables, they need to access the level's array of collidable to add e«and remove themselves, and a collider
+        this.collidablesArr = collidablesArr;
         this.collider;
 
-        this.positionXPix = positionXPix;
-        this.positionYPix = positionYPix;
-        this.positionX = positionXPix / canvasOnePercentWidth;
-        this.positionY = positionYPix / canvasOnePercentHeight;
+        //Object builder method
+        this.buildObject();
 
-        this.width = 0.5 * canvasOnePercentWidth;
-        this.height = this.width;
-
-        this.direction = direction;
-        this.speed = 2;
-        this.verticalSpeed = canvasOnePercentWidth / canvasOnePercentHeight;
-
-        this.buildSpell(spellsArr, collidablesArr);
+        //Each object should call the setAttributes() Method here, to set specific attributes
     }
 
-    buildSpell(spellsArr, collidablesArr) {
+    buildObject() {
+        //Create and append object to the DOM
         const gameCanvas = document.getElementById("canvas");
-        const spellElm = document.createElement("div");
-        spellElm.className = "spell";
-        gameCanvas.appendChild(spellElm);
+        const objectElm = document.createElement("div");
+        gameCanvas.appendChild(objectElm);
 
-        spellElm.style.width = this.width + "px";
-        spellElm.style.height = this.height + "px";
-        spellElm.style.bottom = this.positionYPix + "px";
-        spellElm.style.left = this.positionXPix + "px";
+        this.objectElm = objectElm;
 
-        this.spellElm = spellElm;
+        //Calculate dimentions
+        this.width = Math.floor(this.width * this.canvasOnePercentWidth);
+        this.height = Math.floor(this.proportion * this.width);
 
-        this.collider = new Collider("spell", [(this.positionYPix + this.height), this.positionYPix, this.positionXPix, (this.positionXPix + this.width)]);
+        //Set Element's dimensions
+        this.objectElm.style.width = this.width + "px";
+        this.objectElm.style.height = this.height + "px";
 
-        spellsArr.push(this);
-        collidablesArr.push(this);
+        //Position the new object in the canvas
+        this.setPosition();
+
+        //Set object's collider and add to the level's array of collidable objects
+        this.collider = new Collider("object", [(this.positionYPix + this.height), this.positionYPix, this.positionXPix, (this.positionXPix + this.width)]);
+        this.collidablesArr.push(this);
+        
     }
 
-    move(spellsArr, canvasOnePercentWidth, canvasOnePercentHeight, collidablesArr) {
+    move() {
+        //Change objects relative position in the code
+        this.changePosition();
+
+        //Update object's position in the DOM
+        this.setPosition();
+
+        //Update collider's position
+        this.updateColliderPosition();
+
+    }
+
+    changePosition() {
+    }
+
+    setPosition() {
+        //Calculet X and Y coordinates in absolute units
+        this.positionXPix = Math.floor(this.positionX * this.canvasOnePercentWidth) - this.width / 2;
+        this.positionYPix = Math.floor(this.positionY * this.canvasOnePercentHeight) - this.height / 2;
+
+        //Position the DOM Element in the calculated position
+        this.objectElm.style.bottom = this.positionYPix + "px";
+        this.objectElm.style.left = this.positionXPix + "px";
+
+    }
+    
+    updateColliderPosition() {
+        //Store the limits of the object
+        const newLimits = [(this.positionYPix + this.height), this.positionYPix, this.positionXPix, (this.positionXPix + this.width)];
+
+        //Set the new limits on the object's collider
+        this.collider.setLimits(newLimits);
+
+        //check for collisions
+        this.detectCollisions();
+    }
+
+    detectCollisions() {
+
+        this.collidablesArr.forEach(collidable => {
+
+            //Skip cycle if checking itself
+            if(collidable === this) {
+                return;
+            }
+
+            //Check if there is a collision with any of the level's collidables
+            if (
+              collidable.collider.bottomLimit < this.collider.topLimit &&
+              collidable.collider.topLimit > this.collider.bottomLimit &&
+              collidable.collider.leftLimit < this.collider.rightLimit &&
+              collidable.collider.rightLimit > this.collider.leftLimit
+            ) {
+                //Collison detected, manage according to the tags involved
+                this.manageCollision(collidable);
+            }
+
+        });
+
+    }
+
+    manageCollision(otherObject) {
+        //Each object has a specific behaviour to implement
+    }
+
+    removeObject(...arrays) {
+        //Remove the object from the arrays it belongs to
+        for(let i = 0; i < arrays.length; i++) {
+            const objectPos = arrays[i].indexOf(this);
+            arrays[i].splice(objectPos, 1);
+        }
+
+        //Remove from the DOM
+        this.objectElm.remove();
+        
+        //Remove from memory
+        delete(this);
+    }
+
+    setAtributes(type, name) {
+        this.collider.setTag(name);
+        this.objectElm.setAttribute(type, name);
+    }
+}
+//--------------------------------------------------------
+class Wizard extends GameObject {
+
+    constructor(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, collidablesArr, spellsArr, healthPoints) {
+        super(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, collidablesArr);
+        this.healthPoints = healthPoints;
+        this.direction = "down";
+        this.spellsArr = spellsArr;
+        this.wandX;
+        this.wandY;
+        this.setAtributes("class", "wizard");
+    }
+
+    takeDamage(damage) {
+        this.healthPoints -= damage;
+
+        if(this.healthPoints <= 0) {
+            this.removeObject(this.collidablesArr);
+        }
+    }
+
+    updateDirection() {
+        //Player and enemies have diferent ways of defining direction
+    }
+
+    updateWandPosition() {
+
+        switch (this.direction) {
+            case "up":
+                this.wandX = this.positionXPix + (this.width/2);
+                this.wandY = this.positionYPix + this.height;
+                break;
+
+            case "down":
+                this.wandX = this.positionXPix + (this.width/2);
+                this.wandY = this.positionYPix;
+                break;
+
+            case "left":
+                this.wandX = this.positionXPix;
+                this.wandY = this.positionYPix + (this.height/2);
+                break;
+
+            case "right":
+                this.wandX = this.positionXPix + this.width;
+                this.wandY = this.positionYPix + (this.height/2);
+                break;
+
+            case "upLeft":
+                this.wandX = this.positionXPix;
+                this.wandY = this.positionYPix + this.height;
+                break;
+
+            case "downLeft":
+                this.wandX = this.positionXPix;
+                this.wandY = this.positionYPix;
+                break;
+
+            case "upRight":
+                this.wandX = this.positionXPix + this.width;
+                this.wandY = this.positionYPix + this.height;
+                break;
+
+            case "downRight":
+                this.wandX = this.positionXPix + this.width;
+                this.wandY = this.positionYPix;
+                break;
+
+            default:
+                console.log("Invalid Direction");
+        }
+    }
+
+    shootSpell() {
+        const newSpell = new Spell(this.canvasOnePercentWidth, this.canvasOnePercentHeight, 1, 1, (this.wandX / this.canvasOnePercentWidth), (this.wandY / this.canvasOnePercentHeight), this.collidablesArr, 5, this.direction, this.spellsArr);
+    }
+}
+
+class Player extends Wizard {
+
+    constructor(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, collidablesArr, spellsArr, healthPoints, inputArr) {
+        super(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, collidablesArr, spellsArr, healthPoints);
+        this.inputArr = inputArr;
+        this.speed = 0.5;
+        this.setAtributes("id", "player");
+    }
+
+    changePosition() {
+
+        if((this.positionYPix + this.height) < (100 * this.canvasOnePercentHeight - 10)){ //check if it is not at the top limit
+
+            if(this.inputArr.includes("ArrowUp") && this.inputArr.length === 1){
+                this.positionY += this.speed * this.verticalSpeed;
+            } else if(this.inputArr.includes("ArrowUp")){
+                this.positionY += 0.7 * this.speed * this.verticalSpeed;
+            }
+        }
+
+        if(this.positionYPix > 10){ //check if it's not at the bottom limit
+
+            if(this.inputArr.includes("ArrowDown")  && this.inputArr.length === 1){
+                this.positionY -= this.speed * this.verticalSpeed;
+            } else if(this.inputArr.includes("ArrowDown")){
+                this.positionY -= 0.7 * this.speed * this.verticalSpeed;
+            }
+        }
+
+        if((this.positionXPix + this.width) < (100 * this.canvasOnePercentWidth - 10)){ //check if it's not at the right limit of the canvas
+
+            if(this.inputArr.includes("ArrowRight")  && this.inputArr.length === 1){
+                this.positionX += this.speed;
+            } else if(this.inputArr.includes("ArrowRight")){
+                this.positionX += 0.7 * this.speed;
+            }
+        }
+
+        if(this.positionXPix > 10){ // check if it's not at the left limit
+
+            if(this.inputArr.includes("ArrowLeft")  && this.inputArr.length === 1){
+                this.positionX -= this.speed;
+            } else if(this.inputArr.includes("ArrowLeft")){
+                this.positionX -= 0.7 * this.speed;
+            }
+        }
+
+        this.updateDirection();
+    }
+
+    updateDirection() {
+
+        //Update direction for vertical and horizontal axis input
+        if(this.inputArr.includes("ArrowUp") && this.inputArr.length === 1) {
+            this.direction = "up";
+        } else if(this.inputArr.includes("ArrowDown") && this.inputArr.length === 1) {
+            this.direction = "down";
+        } else if(this.inputArr.includes("ArrowLeft") && this.inputArr.length === 1) {
+            this.direction = "left";
+        } else if(this.inputArr.includes("ArrowRight") && this.inputArr.length === 1) {
+            this.direction = "right";
+        }
+
+        //Update direction for diagonal axis input
+        if(this.inputArr.includes("ArrowUp") && this.inputArr.includes("ArrowLeft") && this.inputArr.length === 2) {
+            this.direction = "upLeft";
+        } else if(this.inputArr.includes("ArrowUp") && this.inputArr.includes("ArrowRight") && this.inputArr.length === 2) {
+            this.direction = "upRight";
+        } else if(this.inputArr.includes("ArrowDown") && this.inputArr.includes("ArrowLeft") && this.inputArr.length === 2) {
+            this.direction = "downLeft";
+        } else if(this.inputArr.includes("ArrowDown") && this.inputArr.includes("ArrowRight") && this.inputArr.length === 2) {
+            this.direction = "downRight";
+        }
+
+        this.updateWandPosition();
+    }
+
+    manageCollision(otherObject) {
+
+        switch(otherObject.collider.tag) {
+
+            case "enemy":
+                console.log("You collided with an enemy");
+                break;
+            
+            case "spell":
+                console.log("You got hit by a spell");
+                break;
+        
+            default:
+                console.log("You collided with something");
+
+        }
+    }
+}
+
+class Enemy extends Wizard {
+
+    constructor(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, collidablesArr, spellsArr, healthPoints) {
+        super(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, collidablesArr, spellsArr, healthPoints);
+        this.setAtributes("class", "enemy");
+
+        console.log("-------");
+    }
+}
+
+//--------------------------------------------------------
+class Spell extends GameObject {
+
+    constructor(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, collidablesArr, damage, direction, spellsArr) {
+        super(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, collidablesArr);
+
+        this.damage = damage;
+        this.direction = direction;
+        this.spellsArr = spellsArr;
+        this.speed = 1;
+        this.setAtributes("class", "spell");
+        spellsArr.push(this);
+    }
+
+    changePosition() {
 
         switch (this.direction) {
             case "up":
@@ -419,75 +480,31 @@ class Spell {
                 console.log("Invalid Direction");
         }
 
-        this.updatePosition(spellsArr, canvasOnePercentWidth, canvasOnePercentHeight, collidablesArr);
-    }
-
-    updatePosition(spellsArr, canvasOnePercentWidth, canvasOnePercentHeight, collidablesArr) {
-        this.positionXPix = Math.floor(this.positionX * canvasOnePercentWidth);
-        this.positionYPix = Math.floor(this.positionY * canvasOnePercentHeight);
-
-
-        this.spellElm.style.bottom = this.positionYPix + "px";
-        this.spellElm.style.left = this.positionXPix + "px";
-
         if(this.positionY < 0 || this.positionY > 100){
-            this.removeSpell(spellsArr, collidablesArr);
+            this.removeObject(this.collidablesArr, this.spellsArr);
         }
         if(this.positionX < 0 || this.positionX > 100){
-            this.removeSpell(spellsArr, collidablesArr);
+            this.removeObject(this.collidablesArr, this.spellsArr);
         }
-
-        this.updateColliderPosition();
-
-        this.detectCollisions(spellsArr, collidablesArr);
     }
 
-    updateColliderPosition() {
-        const newLimits = [(this.positionYPix + this.height), this.positionYPix, this.positionXPix, (this.positionXPix + this.width)];
+    manageCollision(otherObject) {
+        switch(otherObject.collider.tag) {
 
-        this.collider.setLimits(newLimits);
-    }
-
-    detectCollisions(spellsArr, collidablesArr) {
+            case "enemy":
+                otherObject.removeObject(this.collidablesArr);
+                this.removeObject(this.spellsArr, this.collidablesArr);
+                break;
         
-        collidablesArr.forEach(collidable => {
-            if(collidable === this) {
-                return;
-            }
+            default:
+                console.log("You collided with something");
 
-            if(collidable.collider.bottomLimit < this.collider.topLimit &&
-                collidable.collider.topLimit > this.collider.bottomLimit &&
-                collidable.collider.leftLimit < this.collider.rightLimit &&
-                collidable.collider.rightLimit > this.collider.leftLimit) {
-
-                    console.log(`Collision with ${collidable.collider.tag}`);
-
-                    if(collidable.collider.tag === "enemy"){
-                        collidable.removeObject(collidablesArr);
-                        this.removeSpell(spellsArr, collidablesArr)                        
-                    }
-
-                }
-
-        });
+        }
     }
 
-    removeSpell(spellsArr, collidablesArr) {
-        //remove spell from the spells and collidables array
-        let spellPos = spellsArr.indexOf(this);
-        spellsArr.splice(spellPos, 1);
-
-        spellPos = collidablesArr.indexOf(this);
-        collidablesArr.splice(spellPos, 1);
-
-        //remove spell from the DOM
-        this.spellElm.remove();
-
-        //remove from memory
-        delete(this);
-
-    }
 }
+
+//Utility Classes----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 class Collider {
     constructor(tag, limits) {
@@ -498,8 +515,8 @@ class Collider {
         this.rightLimit = limits[3];
     }
 
-    getTag() {
-        return this.tag;
+    setTag(newTag) {
+        this.tag = newTag;
     }
 
     setLimits(limits) {
@@ -510,6 +527,6 @@ class Collider {
     }
 }
 
+/***********************************************************************************************************************************************************************************/
 
-
-const myGame = new Game();
+const myLevel = new Level();
