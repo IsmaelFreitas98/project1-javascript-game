@@ -1,23 +1,85 @@
-//GameManager-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-class GameManager {
+//GameMenu-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+class GameMenu {
     constructor() {
         //DOM elements to manipulate
         this.playerInfo = document.getElementById("player-info");
         this.gameCanvas = document.getElementById("canvas");
         this.statusInfo = document.getElementById("status");
 
+        //Buttons Main Menu
+        this.playBtn;
+        this.setupBtn;
+
+        //Inputs Setup Menu
+        this.returnBtn;
+
         //Game and player information
-        this.playerExp = 0;
-        this.nextLevel = 1;
+        this.playerExp;
+        this.nextLevel;
 
         this.start();
     }
 
     start() {
+        //Build Main menu
+        this.buildMainMenu();        
+    }
+
+    buildMainMenu() {
+
+        //Create and append Play button
+        const playButtonElm = document.createElement("button");
+        playButtonElm.innerText = "GO!!"
+        playButtonElm.classList += "btn";
+        this.playBtn = playButtonElm;
+        this.gameCanvas.appendChild(playButtonElm);
+
+        //Create and append Setup button
+        // const setupButtonElm = document.createElement("button");
+        // setupButtonElm.innerText = "SETUP"
+        // setupButtonElm.classList += "btn";
+        // this.setupBtn = setupButtonElm;
+        // this.gameCanvas.appendChild(setupButtonElm);
+
+        //Organize content in the canvas
+        this.gameCanvas.style.display = "flex";
+        this.gameCanvas.style.flexDirection = "column";
+        this.gameCanvas.style.alignItems = "center";
+        this.gameCanvas.style.justifyContent = "center";
+
+        //Add button listeners
+        this.playBtn.addEventListener("click", () => {
+            this.clearCanvas();
+            const newLevel = new Level(); 
+        });
+        
+        // this.setupBtn.addEventListener("click", () => {
+        //     this.clearCanvas();
+        //     this.buildSetupMenu();
+        // });
+    }
+
+    buildSetupMenu() {
+        //Create and append Return button
+        const returnButtonElm = document.createElement("button");
+        returnButtonElm.innerText = "RETURN"
+        returnButtonElm.classList += "btn";
+        this.returnBtn = returnButtonElm;
+        this.gameCanvas.appendChild(returnButtonElm);
+
+        //add listener
+        this.returnBtn.addEventListener("click", () => {
+            this.clearCanvas();
+            this.buildMainMenu();
+        })
 
     }
+
+    clearCanvas() {
+        this.gameCanvas.innerHTML = "";
+    }
 }
-//Levels------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+//Level Builder------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 class Level {
     constructor() {
         //to make scaling and moving elements possible
@@ -40,11 +102,25 @@ class Level {
         //To track time to spawn enemies
         this.spawnTimer = 0;
 
+        //To control game stops
+        this.enemyShootingId = [];
+        this.frameIntervalId;
+
         this.start();
     }
 
     start() {
 
+        //Add listeners for player input
+        this.addListeners();
+        
+        //initialize level frames cycle
+        this.frameUpdate();
+        
+
+    }
+
+    addListeners() {
         document.addEventListener("keydown", (event) => {
             //Check if one of the arrows was pressed. If it is not in the array that contains the pressed arrows, add it.
             if(event.key === "ArrowUp" && !this.arrowsPressed.includes("ArrowUp")) {
@@ -77,8 +153,11 @@ class Level {
                 console.log("Expeliarmus!");
             }
         });
+    }
 
-        setInterval(() => {
+    frameUpdate() {
+
+        this.frameIntervalId = setInterval(() => {
             //For player movement
             this.player.move();
 
@@ -94,7 +173,29 @@ class Level {
                 this.spawnTimer = 0;
             }
 
+            //Check vistory/defeat conditions
+            this.checkStatus();
+
         }, 16);
+
+    }
+
+    checkStatus() {
+
+        //check defeat
+        if(!document.getElementById("player")) {
+            this.enemyShootingId.forEach(id => clearInterval(id));
+            clearInterval(this.frameIntervalId);
+            this.clearCanvas();
+
+            this.buildDefeatScreen();
+        }
+
+        if(this.player.killCount === 10) {
+            this.clearCanvas();
+
+            this.buildVictoryScreen();
+        }
 
     }
 
@@ -105,9 +206,56 @@ class Level {
             const posX = Math.random() * 80 + 10;
             const posY = Math.random() * 80 + 10;
 
-            const newEnemy = new Enemy(this.canvasOnePercentWidth, this.canvasOnePercentHeight, 3, 1, posX, posY, [this.collidablesArr, this.solidCollidablesArr, this.enemiesArr], 20, this.spellsArr);
+            const newEnemy = new Enemy(this.canvasOnePercentWidth, this.canvasOnePercentHeight, 3, 1, posX, posY, [this.collidablesArr, this.solidCollidablesArr, this.enemiesArr], 20, this.spellsArr, this.enemyShootingId, this.player);
         }
 
+    }
+
+    buildDefeatScreen() {
+        //Message
+        const messageElm = document.createElement("div");
+        messageElm.className = "defeat";
+        messageElm.innerText = "YOU LOSE!"
+
+        this.gameCanvas.appendChild(messageElm);
+
+        //Create and append Return button
+        const returnButtonElm = document.createElement("button");
+        returnButtonElm.innerText = "RETURN"
+        returnButtonElm.classList += "btn";
+        this.gameCanvas.appendChild(returnButtonElm);
+
+        //add listener
+        returnButtonElm.addEventListener("click", () => {
+            this.clearCanvas();
+            const menu = new GameMenu(); 
+        })
+    }
+
+    buildVictoryScreen() {
+        //Message
+        const messageElm = document.createElement("div");
+        messageElm.className = "victory";
+        messageElm.innerText = "YOU PASSED FASE!";
+
+        this.gameCanvas.appendChild(messageElm);
+
+        //Button
+        //Create and append Return button
+        const returnButtonElm = document.createElement("button");
+        returnButtonElm.innerText = "RETURN"
+        returnButtonElm.classList += "btn";
+        this.gameCanvas.appendChild(returnButtonElm);
+
+        //add listener
+        returnButtonElm.addEventListener("click", () => {
+            this.clearCanvas();
+            const menu = new GameMenu(); 
+        })
+    }
+
+    clearCanvas() {
+        this.gameCanvas.innerHTML = "";
     }
 }
 
@@ -426,7 +574,8 @@ class Player extends Wizard {
 
     constructor(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, relatedArrs, healthPoints, spellArr, inputArr) {
         super(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, relatedArrs, healthPoints, spellArr);
-        this.healthPoints = 100;
+        this.healthPoints = 10;
+        this.killCount = 0;
         this.inputArr = inputArr;
         this.speed = 0.5;
         this.setAtributes("id", "player");
@@ -506,11 +655,17 @@ class Player extends Wizard {
         super.removeObject();
         this.canShoot = false;
     }
+
+    incrementKillCount() {
+        this.killCount++;
+
+        console.log(this.killCount);
+    }
 }
 
 class Enemy extends Wizard {
 
-    constructor(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, relatedArrs, healthPoints, spellArr) {
+    constructor(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, relatedArrs, healthPoints, spellArr, shootingArrId, player) {
         super(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, relatedArrs, healthPoints, spellArr);
         this.setAtributes("class", "enemy");
 
@@ -523,6 +678,10 @@ class Enemy extends Wizard {
         //To make it shoot
         this.intervalId;
         this.startShooting();
+        shootingArrId.push(this.intervalId);
+
+        //to interact with player
+        this.player = player;
     }
 
     startShooting() {
@@ -530,8 +689,6 @@ class Enemy extends Wizard {
             this.updateDirection();
             this.updateWandPosition();
             this.shootSpell();
-            console.log(this.wandX);
-            console.log(this.wandY);   
         }, 1500);
      }
 
@@ -543,6 +700,7 @@ class Enemy extends Wizard {
 
     removeObject() {
         super.removeObject();
+        this.player.incrementKillCount();
         clearInterval(this.intervalId);
         this.canShoot = false;
     }
@@ -711,4 +869,5 @@ class Collider {
 
 /***********************************************************************************************************************************************************************************/
 
-const myLevel = new Level();
+//const myLevel = new Level();
+const myGame = new GameMenu();
