@@ -229,9 +229,9 @@ class GameObject {
 
         //Remove from the DOM
         this.objectElm.remove();
-        
-        //Remove from memory
-        delete(this);
+
+        //Remove Collider from the levels
+        this.collider.removeCollider();
     }
 
     setAtributes(type, name) {
@@ -418,8 +418,6 @@ class Enemy extends Wizard {
     constructor(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, collidablesArr, spellsArr, healthPoints) {
         super(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, collidablesArr, spellsArr, healthPoints);
         this.setAtributes("class", "enemy");
-
-        console.log("-------");
     }
 }
 
@@ -492,12 +490,10 @@ class Spell extends GameObject {
         switch(otherObject.collider.tag) {
 
             case "enemy":
-                otherObject.removeObject(this.collidablesArr);
+                otherObject.takeDamage(this.damage);
+                console.log(otherObject.healthPoints);
                 this.removeObject(this.spellsArr, this.collidablesArr);
                 break;
-        
-            default:
-                console.log("You collided with something");
 
         }
     }
@@ -524,6 +520,14 @@ class Collider {
         this.bottomLimit = limits[1];
         this.leftLimit = limits[2];
         this.rightLimit = limits[3];
+    }
+
+    removeCollider() {
+        this.tag = null;
+        this.topLimit = null;
+        this.bottomLimit = null;
+        this.leftLimit = null;
+        this.rightLimit = null;
     }
 }
 
