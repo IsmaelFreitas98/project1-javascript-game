@@ -18,7 +18,7 @@ class Level {
 
         //to keep track of player input
         this.arrowsPressed = [];
-        this.player = new Player(this.canvasOnePercentWidth, this.canvasOnePercentHeight, 3, 1, 50, 50, [this.collidablesArr, this.spellsArr, this.solidCollidablesArr], 20, this.arrowsPressed);
+        this.player = new Player(this.canvasOnePercentWidth, this.canvasOnePercentHeight, 3, 1, 50, 50, [this.collidablesArr, this.solidCollidablesArr], 20, this.spellsArr, this.arrowsPressed);
 
         this.start();
         this.placeEnemies(4);
@@ -77,7 +77,7 @@ class Level {
             const posX = Math.random() * 80 + 10;
             const posY = Math.random() * 80 + 10;
 
-            const newEnemy = new Enemy(this.canvasOnePercentWidth, this.canvasOnePercentHeight, 3, 1, posX, posY, [this.collidablesArr, this.spellsArr, this.solidCollidablesArr], 20);
+            const newEnemy = new Enemy(this.canvasOnePercentWidth, this.canvasOnePercentHeight, 3, 1, posX, posY, [this.collidablesArr, this.solidCollidablesArr], 20, this.spellsArr);
             this.enemiesArr.push(newEnemy);
             this.collidablesArr.push(newEnemy);
         }
@@ -245,20 +245,20 @@ class GameObject {
 
 class Wizard extends GameObject {
 
-    constructor(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, relatedArrs, healthPoints) {
+    constructor(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, relatedArrs, healthPoints, spellArr) {
         super(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, relatedArrs);
 
         //Wizards need health points
         this.healthPoints = healthPoints;
 
         //Properties to create spells
-        this.spellsArr = relatedArrs[1];
+        this.spellsArr = spellArr;
         this.direction = "down";
         this.wandX;
         this.wandY;
 
         //Properties to check that the wizard can move in all directions
-        this.solidCollidablesArr = relatedArrs[2];
+        this.solidCollidablesArr = relatedArrs[1];
         this.solidCollidablesArr.push(this);
         this.canMoveUp = true;
         this.canMoveDown = true;
@@ -393,8 +393,8 @@ class Wizard extends GameObject {
 
 class Player extends Wizard {
 
-    constructor(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, relatedArrs, healthPoints, inputArr) {
-        super(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, relatedArrs, healthPoints);
+    constructor(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, relatedArrs, healthPoints, spellArr, inputArr) {
+        super(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, relatedArrs, healthPoints, spellArr);
         this.inputArr = inputArr;
         this.speed = 0.5;
         this.setAtributes("id", "player");
@@ -473,8 +473,8 @@ class Player extends Wizard {
 
 class Enemy extends Wizard {
 
-    constructor(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, relatedArrs, healthPoints) {
-        super(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, relatedArrs, healthPoints);
+    constructor(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, relatedArrs, healthPoints, spellArr) {
+        super(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, relatedArrs, healthPoints, spellArr);
         this.setAtributes("class", "enemy");
     }
 }
@@ -597,7 +597,7 @@ class Spell extends GameObject {
 
     manageCollision(otherObject) {
        
-        if (otherObject.collider.tag !== "obstacle" && otherObject.collider.tag !== "spell") {
+        if (otherObject.collider.tag !== "spell") {
             otherObject.takeDamage(this.damage);
             console.log(otherObject.healthPoints);          
         } else if(otherObject.collider.tag === "spell") {
