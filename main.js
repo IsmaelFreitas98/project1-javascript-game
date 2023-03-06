@@ -14,10 +14,11 @@ class Level {
         this.spellsArr = [];
         this.enemiesArr = [];
         this.collidablesArr = [];
+        this.solidCollidablesArr = [];
 
         //to keep track of player input
         this.arrowsPressed = [];
-        this.player = new Player(this.canvasOnePercentWidth, this.canvasOnePercentHeight, 3, 1.2, 50, 50, this.collidablesArr, this.spellsArr, 20, this.arrowsPressed);
+        this.player = new Player(this.canvasOnePercentWidth, this.canvasOnePercentHeight, 3, 1, 50, 50, [this.collidablesArr, this.spellsArr, this.solidCollidablesArr], 20, this.arrowsPressed);
 
         this.start();
         this.placeEnemies(4);
@@ -76,7 +77,7 @@ class Level {
             const posX = Math.random() * 80 + 10;
             const posY = Math.random() * 80 + 10;
 
-            const newEnemy = new Enemy(this.canvasOnePercentWidth, this.canvasOnePercentHeight, 3, 1, posX, posY, this.collidablesArr, this.spellsArr, 20);
+            const newEnemy = new Enemy(this.canvasOnePercentWidth, this.canvasOnePercentHeight, 3, 1, posX, posY, [this.collidablesArr, this.spellsArr, this.solidCollidablesArr], 20);
             this.enemiesArr.push(newEnemy);
             this.collidablesArr.push(newEnemy);
         }
@@ -86,16 +87,16 @@ class Level {
 
 //Game Objects------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 //Inheritance Map:
-//                            -->Player
-//               --> Wizard -->
-//                            -->Enemy
+//                             --> Player
+//               --> Wizards -->
+//                             --> Enemy
 // GameObject -->
 //
 //               --> Spell
 //
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 class GameObject {
-    constructor(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, collidablesArr) {
+    constructor(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, relatedArrs) {
         //Store canvas dimension to access in methods
         this.canvasOnePercentWidth = canvasOnePercentWidth;
         this.canvasOnePercentHeight = canvasOnePercentHeight;
@@ -121,7 +122,8 @@ class GameObject {
         this.objectElm;
 
         //Since all objects will be collidables, they need to access the level's array of collidable to add e«and remove themselves, and a collider
-        this.collidablesArr = collidablesArr;
+        this.relatedArrs = relatedArrs;
+        this.collidablesArr = relatedArrs[0];
         this.collider;
 
         //Object builder method
@@ -220,11 +222,11 @@ class GameObject {
         //Each object has a specific behaviour to implement
     }
 
-    removeObject(...arrays) {
+    removeObject() {
         //Remove the object from the arrays it belongs to
-        for(let i = 0; i < arrays.length; i++) {
-            const objectPos = arrays[i].indexOf(this);
-            arrays[i].splice(objectPos, 1);
+        for(let i = 0; i < this.relatedArrs.length; i++) {
+            const objectPos = this.relatedArrs[i].indexOf(this);
+            this.relatedArrs[i].splice(objectPos, 1);
         }
 
         //Remove from the DOM
@@ -240,15 +242,29 @@ class GameObject {
     }
 }
 //--------------------------------------------------------
+
 class Wizard extends GameObject {
 
-    constructor(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, collidablesArr, spellsArr, healthPoints) {
-        super(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, collidablesArr);
+    constructor(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, relatedArrs, healthPoints) {
+        super(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, relatedArrs);
+
+        //Wizards need health points
         this.healthPoints = healthPoints;
+
+        //Properties to create spells
+        this.spellsArr = relatedArrs[1];
         this.direction = "down";
-        this.spellsArr = spellsArr;
         this.wandX;
         this.wandY;
+
+        //Properties to check that the wizard can move in all directions
+        this.solidCollidablesArr = relatedArrs[2];
+        this.solidCollidablesArr.push(this);
+        this.canMoveUp = true;
+        this.canMoveDown = true;
+        this.canMoveLeft = true;
+        this.canMoveRight = true;
+
         this.setAtributes("class", "wizard");
     }
 
@@ -313,14 +329,72 @@ class Wizard extends GameObject {
     }
 
     shootSpell() {
-        const newSpell = new Spell(this.canvasOnePercentWidth, this.canvasOnePercentHeight, 1, 1, (this.wandX / this.canvasOnePercentWidth), (this.wandY / this.canvasOnePercentHeight), this.collidablesArr, 5, this.direction, this.spellsArr);
+        const newSpell = new Spell(this.canvasOnePercentWidth, this.canvasOnePercentHeight, 1, 1, (this.wandX / this.canvasOnePercentWidth), (this.wandY / this.canvasOnePercentHeight), [this.collidablesArr, this.spellsArr], 10, this.direction);
+    }
+
+    checkAvailableMoves() {
+
+        //All moves are considered available before checking
+        this.canMoveUp = true;
+        this.canMoveDown = true;
+        this.canMoveLeft = true;
+        this.canMoveRight = true;
+
+        this.solidCollidablesArr.forEach(collidable => {
+
+            //Skip cycle if checking itself
+            if(collidable === this) {
+                return;
+            }
+
+            //Check if there is will be a colision if it moves up
+            if (
+              collidable.collider.bottomLimit < this.collider.topLimit + (this.speed * this.verticalSpeed * this.canvasOnePercentHeight) &&
+              collidable.collider.topLimit > this.collider.bottomLimit &&
+              collidable.collider.leftLimit < this.collider.rightLimit &&
+              collidable.collider.rightLimit > this.collider.leftLimit
+            ) {
+                this.canMoveUp = false;
+            }
+            
+            //Check if there is will be a colision if it moves down
+            if (
+              collidable.collider.bottomLimit < this.collider.topLimit &&
+              collidable.collider.topLimit > this.collider.bottomLimit - (this.speed * this.verticalSpeed * this.canvasOnePercentHeight) &&
+              collidable.collider.leftLimit < this.collider.rightLimit &&
+              collidable.collider.rightLimit > this.collider.leftLimit
+            ) {
+                this.canMoveDown = false;
+            }
+            
+            //Check if there is will be a colision if it moves right
+            if (
+              collidable.collider.bottomLimit < this.collider.topLimit &&
+              collidable.collider.topLimit > this.collider.bottomLimit &&
+              collidable.collider.leftLimit < this.collider.rightLimit + (this.speed * this.canvasOnePercentWidth) &&
+              collidable.collider.rightLimit > this.collider.leftLimit
+            ) {
+                this.canMoveRight = false;
+            }
+            
+            //Check if there is will be a colision if it moves left
+            if (
+              collidable.collider.bottomLimit < this.collider.topLimit &&
+              collidable.collider.topLimit > this.collider.bottomLimit &&
+              collidable.collider.leftLimit < this.collider.rightLimit &&
+              collidable.collider.rightLimit > this.collider.leftLimit - (this.speed * this.canvasOnePercentWidth)
+            ) {
+                this.canMoveLeft = false;
+            }
+
+        });
     }
 }
 
 class Player extends Wizard {
 
-    constructor(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, collidablesArr, spellsArr, healthPoints, inputArr) {
-        super(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, collidablesArr, spellsArr, healthPoints);
+    constructor(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, relatedArrs, healthPoints, inputArr) {
+        super(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, relatedArrs, healthPoints);
         this.inputArr = inputArr;
         this.speed = 0.5;
         this.setAtributes("id", "player");
@@ -328,7 +402,9 @@ class Player extends Wizard {
 
     changePosition() {
 
-        if((this.positionYPix + this.height) < (100 * this.canvasOnePercentHeight - 10)){ //check if it is not at the top limit
+        this.checkAvailableMoves();
+
+        if((this.positionYPix + this.height) < (100 * this.canvasOnePercentHeight - 10) && this.canMoveUp){ //check if it is not at the top limit
 
             if(this.inputArr.includes("ArrowUp") && this.inputArr.length === 1){
                 this.positionY += this.speed * this.verticalSpeed;
@@ -337,7 +413,7 @@ class Player extends Wizard {
             }
         }
 
-        if(this.positionYPix > 10){ //check if it's not at the bottom limit
+        if(this.positionYPix > 10 && this.canMoveDown){ //check if it's not at the bottom limit
 
             if(this.inputArr.includes("ArrowDown")  && this.inputArr.length === 1){
                 this.positionY -= this.speed * this.verticalSpeed;
@@ -346,7 +422,7 @@ class Player extends Wizard {
             }
         }
 
-        if((this.positionXPix + this.width) < (100 * this.canvasOnePercentWidth - 10)){ //check if it's not at the right limit of the canvas
+        if((this.positionXPix + this.width) < (100 * this.canvasOnePercentWidth - 10) && this.canMoveRight){ //check if it's not at the right limit of the canvas
 
             if(this.inputArr.includes("ArrowRight")  && this.inputArr.length === 1){
                 this.positionX += this.speed;
@@ -355,7 +431,7 @@ class Player extends Wizard {
             }
         }
 
-        if(this.positionXPix > 10){ // check if it's not at the left limit
+        if(this.positionXPix > 10 && this.canMoveLeft){ // check if it's not at the left limit
 
             if(this.inputArr.includes("ArrowLeft")  && this.inputArr.length === 1){
                 this.positionX -= this.speed;
@@ -393,30 +469,12 @@ class Player extends Wizard {
 
         this.updateWandPosition();
     }
-
-    manageCollision(otherObject) {
-
-        switch(otherObject.collider.tag) {
-
-            case "enemy":
-                console.log("You collided with an enemy");
-                break;
-            
-            case "spell":
-                console.log("You got hit by a spell");
-                break;
-        
-            default:
-                console.log("You collided with something");
-
-        }
-    }
 }
 
 class Enemy extends Wizard {
 
-    constructor(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, collidablesArr, spellsArr, healthPoints) {
-        super(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, collidablesArr, spellsArr, healthPoints);
+    constructor(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, relatedArrs, healthPoints) {
+        super(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, relatedArrs, healthPoints);
         this.setAtributes("class", "enemy");
     }
 }
@@ -424,15 +482,66 @@ class Enemy extends Wizard {
 //--------------------------------------------------------
 class Spell extends GameObject {
 
-    constructor(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, collidablesArr, damage, direction, spellsArr) {
-        super(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, collidablesArr);
+    constructor(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, relatedArrs, damage, direction) {
+        super(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, relatedArrs);
 
-        this.damage = damage;
+        //It is necessary to corect the spawn positon of the spell according to it's size, so it doenst affect the object that shoots it
         this.direction = direction;
-        this.spellsArr = spellsArr;
+        this.correctSpellPosition();
+
+        //Spell properties
+        this.damage = damage;
+        this.spellsArr = relatedArrs[1];
         this.speed = 1;
         this.setAtributes("class", "spell");
-        spellsArr.push(this);
+        this.spellsArr.push(this);
+    }
+
+    correctSpellPosition() {
+        switch(this.direction) {
+
+            case "up":
+                this.positionY = (this.positionYPix + 3 * this.height) / this.canvasOnePercentHeight;
+                break;
+
+            case "down":
+                this.positionY = (this.positionYPix - 2 * this.height) / this.canvasOnePercentHeight;
+                break;
+
+            case "left":
+                this.positionX = (this.positionXPix - 2 * this.width) / this.canvasOnePercentWidth;
+                break;
+
+            case "right":
+                this.positionX = (this.positionXPix + 3 * this.width) / this.canvasOnePercentWidth;
+                break;
+
+            case "upLeft":
+                this.positionX = (this.positionXPix - 0.7 * (2 * this.width)) / this.canvasOnePercentWidth;
+                this.positionY = (this.positionYPix + 0.7 * (3 * this.height)) / this.canvasOnePercentHeight;
+                break;
+
+            case "downLeft":
+                this.positionX = (this.positionXPix - 0.7 * (2 * this.width)) / this.canvasOnePercentWidth;
+                this.positionY = (this.positionYPix - 0.7 * (2 * this.height)) / this.canvasOnePercentHeight;
+                break;
+
+            case "upRight":
+                this.positionX = (this.positionXPix + 0.7 * (3 * this.width)) / this.canvasOnePercentWidth;
+                this.positionY = (this.positionYPix + 0.7 * (3 * this.height)) / this.canvasOnePercentHeight;
+                break;
+
+            case "downRight":
+                this.positionX = (this.positionXPix + 0.7 * (3 * this.width)) / this.canvasOnePercentWidth;
+                this.positionY = (this.positionYPix - 0.7 * (2 * this.height)) / this.canvasOnePercentHeight;
+                break;
+
+            default:
+                console.log("Invalid Direction");
+
+        }
+
+        this.setPosition();
     }
 
     changePosition() {
@@ -487,15 +596,15 @@ class Spell extends GameObject {
     }
 
     manageCollision(otherObject) {
-        switch(otherObject.collider.tag) {
-
-            case "enemy":
-                otherObject.takeDamage(this.damage);
-                console.log(otherObject.healthPoints);
-                this.removeObject(this.spellsArr, this.collidablesArr);
-                break;
-
+       
+        if (otherObject.collider.tag !== "obstacle" && otherObject.collider.tag !== "spell") {
+            otherObject.takeDamage(this.damage);
+            console.log(otherObject.healthPoints);          
+        } else if(otherObject.collider.tag === "spell") {
+            otherObject.removeObject();
         }
+
+        this.removeObject();
     }
 
 }
