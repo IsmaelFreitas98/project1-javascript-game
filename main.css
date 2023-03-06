@@ -1,19 +1,29 @@
 body {
-    background-color: black;
+    background-color: rgb(26, 26, 26);
     margin: 0;
 }
 
-#canvas {
+header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0;
+    align-content: center;
+    background-color: black;
+    color: rgb(176, 167, 0);
+    border-bottom: 2px solid rgb(176, 167, 0);
+    height: 10vh;
     width: 100vw;
-    height: 100vh;
-    background-color: gray;
-    position: relative;
-    overflow: hidden;
 }
 
-#player {
-    position: absolute;
-    background-color: blue;
+h1 {
+    margin: 0;
+    font-size: 6vh;
+}
+
+h2 {
+    margin: 2vh 0;
+    font-size: 4vh;
 }
 
 .enemy {
@@ -24,4 +34,48 @@ body {
 .spell {
     position: absolute;
     background-color: yellow;
+}
+
+.button {
+    
+}
+
+.info-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 0 2vw;
+    color: rgb(176, 167, 0);
+    width: 20vw;
+    height: 100%;
+    background-color: black;
+    border: 2px solid rgb(176, 167, 0);
+    border-radius: 1vw;
+}
+
+.info-container hr {
+    width: 60%;
+    border: 1.5px solid rgb(176, 167, 0)
+}
+
+#game-container {
+    display: flex;
+    width: 100%;
+    height: 80vh;
+    margin-top: 5vh;
+}
+
+#canvas {
+    flex-grow: 3;
+    height: 100%;
+    background-color: gray;
+    border: 5px solid rgb(0, 0, 0);
+    border-radius: 1vw;
+    position: relative;
+    overflow: hidden;
+}
+
+#player {
+    position: absolute;
+    background-color: blue;
 }
