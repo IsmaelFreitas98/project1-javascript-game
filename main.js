@@ -17,6 +17,10 @@ class GameMenu {
     }
 
     start() {
+        //check level number
+        if(!this.levelNumber) {
+            this.levelNumber = 1
+        }
         //Build Main menu
         this.buildMainMenu();        
     }
@@ -115,6 +119,7 @@ class GameMenu {
 }
 //LevelBuilder---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 class Level {
+
     constructor(levelNumber) {
         //to make scaling and moving elements possible
         this.gameCanvas = document.getElementById("canvas");
@@ -145,7 +150,6 @@ class Level {
 
         //It is neccessary to store the function applied by the listeners, so we are able to remove them once the level is finished
         this.keyDown = (event) => {
-            console.log("KeyDown");
             //Check if one of the arrows was pressed. If it is not in the array that contains the pressed arrows, add it.
             if(event.key === "ArrowUp" && !this.arrowsPressed.includes("ArrowUp")) {
                 this.arrowsPressed.push(event.key);
@@ -159,7 +163,6 @@ class Level {
         }
 
         this.keyUp = (event) => {
-            console.log("Key Up");
             //Check when the arrows are released, to remove the from the array that contains pressed arrows
             if(event.key === "ArrowUp") {
                 this.arrowsPressed.splice(this.arrowsPressed.indexOf("ArrowUp"), 1);
@@ -173,7 +176,6 @@ class Level {
 
             //Check if spacebar was pressed to shoot spell (on keyup to avoid being called more than 1 time per press)
             if(event.code === "Space") {
-                console.log("listener");
                 this.player.shootSpell();
                 console.log("Expeliarmus!");
             }
@@ -218,7 +220,7 @@ class Level {
 
             //For enemy spawn
             this.spawnTimer += 16;
-            if(this.spawnTimer >= 5000 && this.enemiesArr.length < 1) {
+            if(this.spawnTimer >= 2000 && this.enemiesArr.length < (2 * this.levelNumber)) {
                 this.placeEnemies(1);
                 this.spawnTimer = 0;
             }
@@ -234,6 +236,8 @@ class Level {
         
         //check for victory
         if(this.player.killCount === 5) {
+            this.enemyShootingId.forEach(id => clearInterval(id));
+            clearInterval(this.frameIntervalId);
             this.clearCanvas();
             this.buildVictoryScreen();
         } else if(!document.getElementById("player")) {
@@ -549,7 +553,8 @@ class Wizard extends GameObject {
                 break;
 
             default:
-                console.log("Invalid Direction");
+                this.wandX = this.originX + (this.width / 2) * this.direction[0];
+                this.wandY = this.originY + (this.height / 2) * this.direction[1];
         }
     }
 
@@ -731,15 +736,18 @@ class Enemy extends Wizard {
         this.enemiesArr = relatedArrs[2];
         this.enemiesArr.push(this);
 
-        this.updateWandPosition();
+        //to interact with player
+        this.player = player;        
 
         //To make it shoot
+        this.originX;
+        this.originY;
         this.intervalId;
+        this.updateDirection();
         this.startShooting();
         shootingArrId.push(this.intervalId);
 
-        //to interact with player
-        this.player = player;
+        
     }
 
     startShooting() {
@@ -747,13 +755,33 @@ class Enemy extends Wizard {
             this.updateDirection();
             this.updateWandPosition();
             this.shootSpell();
-        }, 1500);
+        }, 2000);
      }
 
     updateDirection() {
-        const possibleDirections = ["up", "down", "left", "right", "upLeft", "upRight", "downRight", "downLeft"];
-        const posIndex = Math.floor(Math.random() * possibleDirections.length);
-        this.direction = possibleDirections[posIndex];
+        const directionVector = [];
+        const newDirectionVector = [];
+        const target = this.getTarget();
+        const origin = [this.positionXPix + (this.width / 2), this.positionYPix + (this.height / 2)];
+        this.originX = origin[0];
+        this.originY = origin[1];
+
+        directionVector[0] = target[0] - origin[0];
+        directionVector[1] = target[1] - origin[1];
+
+        newDirectionVector[0] = directionVector[0] / (Math.abs(directionVector[0]) + Math.abs(directionVector[1]));
+        newDirectionVector[1] = directionVector[1] / (Math.abs(directionVector[0]) + Math.abs(directionVector[1]));
+
+        this.direction = newDirectionVector;
+
+        this.updateWandPosition();
+    }
+
+    getTarget() {
+        const target = [];
+        target[0] = this.player.positionXPix + (this.player.width / 2);
+        target[1] = this.player.positionYPix + (this.player.height / 2);
+        return target;
     }
 
     removeObject() {
@@ -782,7 +810,6 @@ class Spell extends GameObject {
         this.setAtributes("class", "spell");
         this.spellsArr.push(this);
 
-        console.log(this.spellsArr);
     }
 
     correctSpellPosition() {
@@ -825,7 +852,8 @@ class Spell extends GameObject {
                 break;
 
             default:
-                console.log("Invalid Direction");
+                this.positionX = (this.positionXPix + (this.direction[0] * 3 * this.width)) / this.canvasOnePercentWidth;
+                this.positionY = (this.positionYPix + (this.direction[1] * 3 * this.height)) / this.canvasOnePercentHeight;
 
         }
 
@@ -872,7 +900,8 @@ class Spell extends GameObject {
                 break;
 
             default:
-                console.log("Invalid Direction");
+                this.positionX += this.direction[0] * this.speed;
+                this.positionY += this.direction[1] * this.speed * this.verticalSpeed;
         }
 
         if(this.positionY < 0 || this.positionY > 100){
@@ -886,8 +915,7 @@ class Spell extends GameObject {
     manageCollision(otherObject) {
        
         if (otherObject.collider.tag !== "spell") {
-            otherObject.takeDamage(this.damage);
-            console.log(otherObject.healthPoints);          
+            otherObject.takeDamage(this.damage);        
         } else if(otherObject.collider.tag === "spell") {
             otherObject.removeObject();
         }
