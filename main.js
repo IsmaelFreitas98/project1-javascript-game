@@ -1,6 +1,6 @@
 //GameMenu-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 class GameMenu {
-    constructor(levelNumber) {
+    constructor(levelNumber, playerExp, spellOne, spellTwo) {
         //DOM elements to manipulate
         this.playerInfo = document.getElementById("player-info");
         this.gameCanvas = document.getElementById("canvas");
@@ -10,40 +10,73 @@ class GameMenu {
         this.levelNumber = levelNumber;
 
         //Game and player information
-        this.playerExp;
-        this.nextLevel;
+        this.playerExp = playerExp;
+        this.spellOne = spellOne;
+        this.spellTwo = spellTwo;
+
 
         this.start();
     }
 
     start() {
-        //check level number
-        if(!this.levelNumber) {
-            this.levelNumber = 1
-        }
+        //check arguments
+        this.levelNumber = this.levelNumber ? this.levelNumber : 1;
+        this.playerExp = this.playerExp ? this.playerExp : 0;
+
         //Build Main menu
         this.buildMainMenu();        
     }
 
     buildMainMenu() {
 
-        //Set Game Text
-        this.setGameRulesText();
+        if(this.levelNumber === 1){
+            //Set Game Text
+            this.setGameRulesText();
 
-        //Set Controls Text
-        this.setControlsText();
+            //Set Controls Text
+            this.setControlsText();
+
+        } else {
+            this.setPlayerInfo();
+            this.setNextLevelInfo();
+        }
 
         //Create and append Play button
         const playButtonElm = document.createElement("button");
-        playButtonElm.innerText = "GO!!"
+        if(this.levelNumber === 1){
+            playButtonElm.innerText = "GO!!"
+        } else {
+            playButtonElm.innerText = `Level ${this.levelNumber}`
+        }
+        
         playButtonElm.classList += "btn";
         this.gameCanvas.appendChild(playButtonElm);
 
-        //Create and append Setup button
-        const shopButtonElm = document.createElement("button");
-        shopButtonElm.innerText = "SHOP"
-        shopButtonElm.classList += "btn";
-        this.gameCanvas.appendChild(shopButtonElm);
+        if(this.levelNumber > 1) {
+             //Create and append Shop button
+            const shopButtonElm = document.createElement("button");
+            shopButtonElm.innerText = "SHOP"
+            shopButtonElm.classList += "btn";
+            this.gameCanvas.appendChild(shopButtonElm);
+
+            //Add Shop button Listener
+            shopButtonElm.addEventListener("click", () => {
+                this.clearCanvas();
+                this.buildShopMenu();
+            });
+             
+            //Create and append Spells button
+            const spellsButtonElm = document.createElement("button");
+            spellsButtonElm.innerText = "SPELLS"
+            spellsButtonElm.classList += "btn";
+            this.gameCanvas.appendChild(spellsButtonElm);
+
+            //Add Spells button listener
+            spellsButtonElm.addEventListener("click", () => {
+                this.clearCanvas();
+                this.buildSpellsMenu();
+            });
+        }
 
         //Organize content in the canvas
         this.gameCanvas.style.display = "flex";
@@ -54,16 +87,28 @@ class GameMenu {
         //Add button listeners
         playButtonElm.addEventListener("click", () => {
             this.clearCanvas();
-            const newLevel = new Level(this.levelNumber);
+            const newLevel = new Level(this.levelNumber, this.playerExp);
         });
         
-        shopButtonElm.addEventListener("click", () => {
-            this.clearCanvas();
-            this.buildSetupMenu();
-        });
     }
 
-    buildSetupMenu() {
+    buildShopMenu() {
+        //Create and append Return button
+        const returnButtonElm = document.createElement("button");
+        returnButtonElm.innerText = "RETURN"
+        returnButtonElm.classList += "btn";
+        this.returnBtn = returnButtonElm;
+        this.gameCanvas.appendChild(returnButtonElm);
+
+        //add listener
+        this.returnBtn.addEventListener("click", () => {
+            this.clearCanvas();
+            this.buildMainMenu();
+        })
+
+    }
+    
+    buildSpellsMenu() {
         //Create and append Return button
         const returnButtonElm = document.createElement("button");
         returnButtonElm.innerText = "RETURN"
@@ -109,6 +154,37 @@ class GameMenu {
         controlsTextContainer.appendChild(controlsText);
     }
 
+    setPlayerInfo() {
+        const playerTitleElm = document.getElementById("player-header");
+        playerTitleElm.innerText = "YOUR AUROR";
+
+        const playerInfoContainer = document.getElementById("player-info");
+
+        const playerExp = document.createElement("p");
+        playerExp.innerText = `EXP: ${this.playerExp} points`;
+        playerInfoContainer.appendChild(playerExp);
+        
+        const playerBuild = document.createElement("p");
+        playerBuild.innerText = `This will show the spells you have selected`;
+        playerInfoContainer.appendChild(playerBuild);
+    }
+
+    setNextLevelInfo() {
+        const statusTitleElm = document.getElementById("status-header");
+        statusTitleElm.innerText = `LEVEL ${this.levelNumber}`;
+
+        const levelInfoContainer = document.getElementById("status-info");
+        const infoText = document.createElement("p");
+        infoText.innerText = `IN LEVEL ${this.levelNumber}:
+
+
+        - Up to ${this.levelNumber} enemies;
+
+        - If you clear it you will get ${this.levelNumber * 50} Exp Points!`;
+
+        levelInfoContainer.appendChild(infoText);
+    }
+
     clearCanvas() {
         this.gameCanvas.innerHTML = "";
         const rulesTextContainer = document.getElementById("player-info");
@@ -120,7 +196,7 @@ class GameMenu {
 //LevelBuilder---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 class Level {
 
-    constructor(levelNumber) {
+    constructor(levelNumber, playerExp) {
         //to make scaling and moving elements possible
         this.gameCanvas = document.getElementById("canvas");
         this.canvasWidth = this.gameCanvas.clientWidth;
@@ -145,7 +221,8 @@ class Level {
         this.enemyShootingId = [];
         this.frameIntervalId;
 
-        //To control level flow
+        //To control level
+        this.playerExp = playerExp;
         this.levelNumber = levelNumber;
 
         //It is neccessary to store the function applied by the listeners, so we are able to remove them once the level is finished
@@ -206,7 +283,6 @@ class Level {
         document.removeEventListener("keyup", this.keyUp);
     }
 
-
     frameUpdate() {
 
         this.frameIntervalId = setInterval(() => {
@@ -220,7 +296,7 @@ class Level {
 
             //For enemy spawn
             this.spawnTimer += 16;
-            if(this.spawnTimer >= 2000 && this.enemiesArr.length < (2 * this.levelNumber)) {
+            if(this.spawnTimer >= 2000 && this.enemiesArr.length < this.levelNumber) {
                 this.placeEnemies(1);
                 this.spawnTimer = 0;
             }
@@ -236,6 +312,7 @@ class Level {
         
         //check for victory
         if(this.player.killCount === 5) {
+            this.playerExp += this.levelNumber * 50;
             this.enemyShootingId.forEach(id => clearInterval(id));
             clearInterval(this.frameIntervalId);
             this.clearCanvas();
@@ -251,9 +328,12 @@ class Level {
     placeEnemies(numberOfEnemies) {
 
         for(let i = 0; i < numberOfEnemies; i++) {
-
-            const posX = Math.random() * 80 + 10;
-            const posY = Math.random() * 80 + 10;
+            let posX;
+            let posY;
+            do {
+                posX = Math.random() * 80 + 10;
+                posY = Math.random() * 80 + 10;
+            } while(Math.abs(posX - this.player.positionX) < 20 && Math.abs(posY - this.player.positionY) < 20);
 
             const newEnemy = new Enemy(this.canvasOnePercentWidth, this.canvasOnePercentHeight, 3, 1, posX, posY, [this.collidablesArr, this.solidCollidablesArr, this.enemiesArr], 20, this.spellsArr, this.enemyShootingId, this.player);
         }
@@ -277,7 +357,8 @@ class Level {
         //add listener
         returnButtonElm.addEventListener("click", () => {
             this.clearCanvas();
-            const menu = new GameMenu(1);
+            const menu = new GameMenu(this.levelNumber, this.playerExp
+                );
         })
     }
 
@@ -285,7 +366,7 @@ class Level {
         //Message
         const messageElm = document.createElement("div");
         messageElm.className = "victory";
-        messageElm.innerText = "YOU PASSED FASE!";
+        messageElm.innerText = `LEVEL ${this.levelNumber} CLEARED!`;
 
         this.gameCanvas.appendChild(messageElm);
 
@@ -299,7 +380,7 @@ class Level {
         //add listener
         continueButtonElm.addEventListener("click", () => {
             this.clearCanvas();
-            const menu = new GameMenu(this.levelNumber + 1); 
+            const menu = new GameMenu(this.levelNumber + 1, this.playerExp); 
         })
     }
 
@@ -637,7 +718,7 @@ class Player extends Wizard {
 
     constructor(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, relatedArrs, healthPoints, spellArr, inputArr) {
         super(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, relatedArrs, healthPoints, spellArr);
-        this.healthPoints = 10;
+        this.healthPoints = 20;
         this.killCount = 0;
         this.inputArr = inputArr;
         this.speed = 0.5;
@@ -803,7 +884,7 @@ class Spell extends GameObject {
         this.correctSpellPosition();
 
         //Spell properties
-        this.coolDown = 0;
+        this.coolDown = 0.7;
         this.damage = damage;
         this.spellsArr = relatedArrs[1];
         this.speed = 1;
@@ -959,4 +1040,4 @@ class Collider {
 /***********************************************************************************************************************************************************************************/
 
 //const myLevel = new Level();
-const myGame = new GameMenu(0);
+const myGame = new GameMenu();
