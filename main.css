@@ -10,6 +10,7 @@ header {
     margin: 0;
     align-content: center;
     background-color: black;
+    background: radial-gradient(black 25vw, rgb(176, 167, 0));
     color: rgb(176, 167, 0);
     border-bottom: 2px solid rgb(176, 167, 0);
     height: 10vh;
@@ -18,12 +19,12 @@ header {
 
 h1 {
     margin: 0;
-    font-size: 6vh;
+    font-size: 2.5vw;
 }
 
 h2 {
     margin: 2vh 0;
-    font-size: 4vh;
+    font-size: 2vw;
 }
 
 .enemy {
@@ -63,6 +64,20 @@ h2 {
 .info-container hr {
     width: 60%;
     border: 1.5px solid rgb(176, 167, 0)
+}
+
+.info-container p {
+    margin: 1vw;
+    font-size: 1.3vw;
+    text-align: center;
+}
+
+.flex-info {
+    height: 70%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .defeat {

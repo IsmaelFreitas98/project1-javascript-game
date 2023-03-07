@@ -6,13 +6,6 @@ class GameMenu {
         this.gameCanvas = document.getElementById("canvas");
         this.statusInfo = document.getElementById("status");
 
-        //Buttons Main Menu
-        this.playBtn;
-        this.setupBtn;
-
-        //Inputs Setup Menu
-        this.returnBtn;
-
         //Game and player information
         this.playerExp;
         this.nextLevel;
@@ -27,19 +20,23 @@ class GameMenu {
 
     buildMainMenu() {
 
+        //Set Game Text
+        this.setGameRulesText();
+
+        //Set Controls Text
+        this.setControlsText();
+
         //Create and append Play button
         const playButtonElm = document.createElement("button");
         playButtonElm.innerText = "GO!!"
         playButtonElm.classList += "btn";
-        this.playBtn = playButtonElm;
         this.gameCanvas.appendChild(playButtonElm);
 
         //Create and append Setup button
-        // const setupButtonElm = document.createElement("button");
-        // setupButtonElm.innerText = "SETUP"
-        // setupButtonElm.classList += "btn";
-        // this.setupBtn = setupButtonElm;
-        // this.gameCanvas.appendChild(setupButtonElm);
+        const shopButtonElm = document.createElement("button");
+        shopButtonElm.innerText = "SHOP"
+        shopButtonElm.classList += "btn";
+        this.gameCanvas.appendChild(shopButtonElm);
 
         //Organize content in the canvas
         this.gameCanvas.style.display = "flex";
@@ -48,15 +45,15 @@ class GameMenu {
         this.gameCanvas.style.justifyContent = "center";
 
         //Add button listeners
-        this.playBtn.addEventListener("click", () => {
+        playButtonElm.addEventListener("click", () => {
             this.clearCanvas();
             const newLevel = new Level(); 
         });
         
-        // this.setupBtn.addEventListener("click", () => {
-        //     this.clearCanvas();
-        //     this.buildSetupMenu();
-        // });
+        shopButtonElm.addEventListener("click", () => {
+            this.clearCanvas();
+            this.buildSetupMenu();
+        });
     }
 
     buildSetupMenu() {
@@ -75,8 +72,42 @@ class GameMenu {
 
     }
 
+    setGameRulesText() {
+        const gameTitleElm = document.getElementById("player-header");
+        gameTitleElm.innerText = "GAME";
+
+        const rulesTextContainer = document.getElementById("player-info");
+        const rulesText = document.createElement("p");
+        rulesText.innerText = ` - You are an Auror (dark wizard catcher) in training!
+
+        - To pass each level, you will have to kill a certain amount of enemies, that increases with the levels!
+
+        - When you kill an enemy, you will earn Exp, that you can use to unlock new spells!
+
+        - Don't be killed!!!`;
+
+        rulesTextContainer.appendChild(rulesText);
+    }
+
+    setControlsText() {
+        const controlsTitleElm = document.getElementById("status-header");
+        controlsTitleElm.innerText = "CONTROLS";
+
+        const controlsTextContainer = document.getElementById("status-info");
+        const controlsText = document.createElement("p");
+        controlsText.innerText = ` - Use the arrows to move your Auror!
+
+        - Press Space to cast spells!`;
+
+        controlsTextContainer.appendChild(controlsText);
+    }
+
     clearCanvas() {
         this.gameCanvas.innerHTML = "";
+        const rulesTextContainer = document.getElementById("player-info");
+        rulesTextContainer.innerHTML = "";
+        const controlsTextContainer = document.getElementById("status-info");
+        controlsTextContainer.innerHTML = "";
     }
 }
 //Level Builder------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -242,13 +273,13 @@ class Level {
 
         //Button
         //Create and append Return button
-        const returnButtonElm = document.createElement("button");
-        returnButtonElm.innerText = "RETURN"
-        returnButtonElm.classList += "btn";
-        this.gameCanvas.appendChild(returnButtonElm);
+        const continueButtonElm = document.createElement("button");
+        continueButtonElm.innerText = "CONTINUE"
+        continueButtonElm.classList += "btn";
+        this.gameCanvas.appendChild(continueButtonElm);
 
         //add listener
-        returnButtonElm.addEventListener("click", () => {
+        continueButtonElm.addEventListener("click", () => {
             this.clearCanvas();
             const menu = new GameMenu(); 
         })
@@ -508,7 +539,17 @@ class Wizard extends GameObject {
     shootSpell() {
         if(this.canShoot) {
             const newSpell = new Spell(this.canvasOnePercentWidth, this.canvasOnePercentHeight, 1, 1, (this.wandX / this.canvasOnePercentWidth), (this.wandY / this.canvasOnePercentHeight), [this.collidablesArr, this.spellsArr], 10, this.direction);
+
+            this.setCastCoolDown(newSpell);
         }
+    }
+
+    setCastCoolDown(spell) {
+        this.canShoot = false;
+
+        setTimeout(() => {
+            this.canShoot = true;
+        }, spell.coolDown * 1000);
     }
 
     checkAvailableMoves() {
@@ -717,6 +758,7 @@ class Spell extends GameObject {
         this.correctSpellPosition();
 
         //Spell properties
+        this.coolDown = 1;
         this.damage = damage;
         this.spellsArr = relatedArrs[1];
         this.speed = 1;
