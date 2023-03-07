@@ -1,10 +1,13 @@
 //GameMenu-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 class GameMenu {
-    constructor() {
+    constructor(levelNumber) {
         //DOM elements to manipulate
         this.playerInfo = document.getElementById("player-info");
         this.gameCanvas = document.getElementById("canvas");
         this.statusInfo = document.getElementById("status");
+
+        //Info on the Level to create in this instance
+        this.levelNumber = levelNumber;
 
         //Game and player information
         this.playerExp;
@@ -47,7 +50,7 @@ class GameMenu {
         //Add button listeners
         playButtonElm.addEventListener("click", () => {
             this.clearCanvas();
-            const newLevel = new Level(); 
+            const newLevel = new Level(this.levelNumber);
         });
         
         shopButtonElm.addEventListener("click", () => {
@@ -110,9 +113,9 @@ class GameMenu {
         controlsTextContainer.innerHTML = "";
     }
 }
-//Level Builder------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+//LevelBuilder---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 class Level {
-    constructor() {
+    constructor(levelNumber) {
         //to make scaling and moving elements possible
         this.gameCanvas = document.getElementById("canvas");
         this.canvasWidth = this.gameCanvas.clientWidth;
@@ -137,22 +140,12 @@ class Level {
         this.enemyShootingId = [];
         this.frameIntervalId;
 
-        this.start();
-    }
+        //To control level flow
+        this.levelNumber = levelNumber;
 
-    start() {
-
-        //Add listeners for player input
-        this.addListeners();
-        
-        //initialize level frames cycle
-        this.frameUpdate();
-        
-
-    }
-
-    addListeners() {
-        document.addEventListener("keydown", (event) => {
+        //It is neccessary to store the function applied by the listeners, so we are able to remove them once the level is finished
+        this.keyDown = (event) => {
+            console.log("KeyDown");
             //Check if one of the arrows was pressed. If it is not in the array that contains the pressed arrows, add it.
             if(event.key === "ArrowUp" && !this.arrowsPressed.includes("ArrowUp")) {
                 this.arrowsPressed.push(event.key);
@@ -163,10 +156,10 @@ class Level {
             } else if(event.key === "ArrowRight" && !this.arrowsPressed.includes("ArrowRight")) {
                 this.arrowsPressed.push(event.key);
             }
+        }
 
-        });
-
-        document.addEventListener("keyup", (event) => {
+        this.keyUp = (event) => {
+            console.log("Key Up");
             //Check when the arrows are released, to remove the from the array that contains pressed arrows
             if(event.key === "ArrowUp") {
                 this.arrowsPressed.splice(this.arrowsPressed.indexOf("ArrowUp"), 1);
@@ -180,11 +173,37 @@ class Level {
 
             //Check if spacebar was pressed to shoot spell (on keyup to avoid being called more than 1 time per press)
             if(event.code === "Space") {
+                console.log("listener");
                 this.player.shootSpell();
                 console.log("Expeliarmus!");
             }
-        });
+        }
+
+        this.start();
     }
+
+    start() {
+
+        //Add listeners for player input is its the first time the level is being instanced
+        this.addListeners();
+               
+        //initialize level frames cycle
+        this.frameUpdate();
+        
+
+    }
+
+    addListeners() {
+        document.addEventListener("keydown", this.keyDown);
+        document.addEventListener("keyup", this.keyUp);
+
+    }
+
+    removeListeners() {
+        document.removeEventListener("keydown", this.keyDown);
+        document.removeEventListener("keyup", this.keyUp);
+    }
+
 
     frameUpdate() {
 
@@ -199,7 +218,7 @@ class Level {
 
             //For enemy spawn
             this.spawnTimer += 16;
-            if(this.spawnTimer >= 5000 && this.enemiesArr.length < 5) {
+            if(this.spawnTimer >= 5000 && this.enemiesArr.length < 1) {
                 this.placeEnemies(1);
                 this.spawnTimer = 0;
             }
@@ -212,22 +231,17 @@ class Level {
     }
 
     checkStatus() {
-
-        //check defeat
-        if(!document.getElementById("player")) {
+        
+        //check for victory
+        if(this.player.killCount === 5) {
+            this.clearCanvas();
+            this.buildVictoryScreen();
+        } else if(!document.getElementById("player")) {
             this.enemyShootingId.forEach(id => clearInterval(id));
             clearInterval(this.frameIntervalId);
             this.clearCanvas();
-
             this.buildDefeatScreen();
         }
-
-        if(this.player.killCount === 10) {
-            this.clearCanvas();
-
-            this.buildVictoryScreen();
-        }
-
     }
 
     placeEnemies(numberOfEnemies) {
@@ -259,7 +273,7 @@ class Level {
         //add listener
         returnButtonElm.addEventListener("click", () => {
             this.clearCanvas();
-            const menu = new GameMenu(); 
+            const menu = new GameMenu(1);
         })
     }
 
@@ -281,11 +295,14 @@ class Level {
         //add listener
         continueButtonElm.addEventListener("click", () => {
             this.clearCanvas();
-            const menu = new GameMenu(); 
+            const menu = new GameMenu(this.levelNumber + 1); 
         })
     }
 
     clearCanvas() {
+        this.removeListeners();
+        clearInterval(this.frameIntervalId);
+        delete(this.player);
         this.gameCanvas.innerHTML = "";
     }
 }
@@ -758,12 +775,14 @@ class Spell extends GameObject {
         this.correctSpellPosition();
 
         //Spell properties
-        this.coolDown = 1;
+        this.coolDown = 0;
         this.damage = damage;
         this.spellsArr = relatedArrs[1];
         this.speed = 1;
         this.setAtributes("class", "spell");
         this.spellsArr.push(this);
+
+        console.log(this.spellsArr);
     }
 
     correctSpellPosition() {
@@ -912,4 +931,4 @@ class Collider {
 /***********************************************************************************************************************************************************************************/
 
 //const myLevel = new Level();
-const myGame = new GameMenu();
+const myGame = new GameMenu(0);
