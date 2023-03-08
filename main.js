@@ -1,6 +1,6 @@
 //GameMenu-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 class GameMenu {
-    constructor(levelNumber, playerExp) {
+    constructor(levelNumber, playerExp, lockedSpells, spellsInUse) {
         //DOM elements to manipulate
         this.playerInfo = document.getElementById("player-info");
         this.gameCanvas = document.getElementById("canvas");
@@ -21,8 +21,8 @@ class GameMenu {
 
         //Locked, Unlocked, and spells in use
         this.lockedSpells = [this.stupefy, this.expelliarmus, this.reducto, this.avada];
-        this.unlockedSpells = [];
-        this.spellsInUse = [];
+        this.unlockedSpells = [this.basic];
+        this.spellsInUse = [this.basic];
 
 
         this.start();
@@ -140,7 +140,9 @@ class GameMenu {
             spellDisplayer.appendChild(text);
         } else {
 
-            this.lockedSpells.forEach((spell) => {
+            const spells = [];
+
+            this.lockedSpells.forEach((spell) => {                
 
                 const spellElm = document.createElement("div");
                 spellElm.style.backgroundImage = `url(${spell.image})`;
@@ -148,11 +150,19 @@ class GameMenu {
                 spellElm.style.width = "15%";
                 spellElm.style.aspectRatio = "1 / 1";
                 spellElm.style.margin = "2vw";
+                spellElm.style.borderRadius = "50%";
+                spellElm.style.boxShadow = "0 0 2vw rgb(176, 167, 0)";
 
                 spellDisplayer.appendChild(spellElm);
+                spells.push(spellElm);
 
                 spellElm.addEventListener("click", () => {
+                    //set all shadows
+                    spells.forEach(spell => {
+                        spell.style.boxShadow = "0 0 2vw rgb(176, 167, 0)";
+                    });
 
+                    spellElm.style.boxShadow = "0 0 2vw rgb(207, 0, 0)";
                     this.clearStatus();
 
                     titleContainer.innerText = spell.name.toUpperCase();
@@ -211,6 +221,27 @@ class GameMenu {
     
     buildSpellsMenu() {
 
+        //Update status and player info containers
+        const playerExp = document.getElementById("player-info");
+        const exp = document.createElement("p");
+        exp.innerText = `Choose Wisely!`;
+        playerExp.appendChild(exp);
+
+        const titleContainer = document.getElementById("status-header");
+        titleContainer.innerText = "Spell Skillset"
+
+        const textContainer = document.getElementById("status-info");
+        const text = document.createElement("p");
+        text.innerText = `- Here you can choose 2 of the spells you already know!
+
+        - The spell with blue shadow is selected to be your first key spell!
+        
+        - The spell with green shadow is selected to be your second key spell!
+        
+        - You can change your selection anytime between levels!`;
+        
+        textContainer.appendChild(text);
+
         //create spells container
         const spellDisplayer = document.createElement("div");
 
@@ -219,13 +250,90 @@ class GameMenu {
         spellDisplayer.style.height = "80%";
         spellDisplayer.style.display = "flex";
         spellDisplayer.style.alignItems = "center";
-        spellDisplayer.style.justifyContent = "space-around";
-        spellDisplayer.style.backgroundColor = "blue";
+        spellDisplayer.style.justifyContent = "center";
         this.gameCanvas.appendChild(spellDisplayer);
+
+        //get and display the spells
+        const spells = [];
+
+        this.unlockedSpells.forEach((spell) => {
+ 
+            const spellElm = document.createElement("div");
+            spellElm.style.backgroundImage = `url(${spell.image})`;
+            spellElm.style.backgroundSize = "cover";
+            spellElm.style.width = "15%";
+            spellElm.style.aspectRatio = "1 / 1";
+            spellElm.style.margin = "2vw";
+            spellElm.style.borderRadius = "50%";
+
+            
+            if(this.spellsInUse.includes(spell)) {
+                if(this.spellsInUse.indexOf(spell) === 0){
+                    spellElm.style.boxShadow = "0 0 2vw rgb(0, 0, 176)";
+                } else {
+                    spellElm.style.boxShadow = "0 0 2vw rgb(0, 176, 0)";
+                }
+            }
+
+            spellDisplayer.appendChild(spellElm);
+            
+            const spellObj = {spell: spell, spellElm: spellElm};
+            spells.push(spellObj);
+
+            spellElm.addEventListener("click", () => {
+
+                spells.forEach(spellObj => {
+                    if(this.spellsInUse.includes(spellObj.spell)) {
+                        if(this.spellsInUse.indexOf(spellObj.spell) === 0){
+                            spellObj.spellElm.style.boxShadow = "0 0 2vw rgb(0, 0, 176)";
+                        } else {
+                            spellObj.spellElm.style.boxShadow = "0 0 2vw rgb(0, 176, 0)";
+                        }
+                    } else {
+                        spellObj.spellElm.style.boxShadow = "";
+                    }
+                });
+
+                spellElm.style.boxShadow = "0 0 2vw rgb(207, 0, 0)";
+                
+                this.clearStatus();
+
+                titleContainer.innerText = spell.name.toUpperCase();
+
+                const text = document.createElement("p");
+                text.innerText = `POWER: ${spell.power}HP
+                
+                COOLDOWN: ${spell.cooldown}s`;
+
+                textContainer.appendChild(text);
+
+                if(!this.spellsInUse.includes(spell)) {
+                    const useBtn = document.createElement("button");
+                    useBtn.setAttribute("id", "buy-btn");
+                    useBtn.innerText = "Use!";
+                    textContainer.appendChild(useBtn);
+
+                    useBtn.addEventListener("click", () => {
+                        this.useSpell(spell);
+                    });
+                } else {
+                    const unuseBtn = document.createElement("button");
+                    unuseBtn.setAttribute("id", "buy-btn");
+                    unuseBtn.innerText = "Don't Use!";
+                    textContainer.appendChild(unuseBtn);
+
+                    unuseBtn.addEventListener("click", () => {
+                        this.unuseSpell(spell);
+                    });
+                }
+
+            });
+
+        });
 
         //Create and append Return button
         const returnButtonElm = document.createElement("button");
-        returnButtonElm.innerText = "SAVE"
+        returnButtonElm.innerText = "Done!"
         returnButtonElm.classList += "btn";
         this.returnBtn = returnButtonElm;
         this.gameCanvas.appendChild(returnButtonElm);
@@ -236,6 +344,29 @@ class GameMenu {
             this.buildMainMenu();
         })
 
+    }
+
+    useSpell(spell) {
+
+        if(this.spellsInUse.length < 2) {
+            this.spellsInUse.push(spell);
+        } else {
+            this.spellsInUse.shift();
+            this.spellsInUse.push(spell);
+        }
+
+        this.clearCanvas();
+        this.buildSpellsMenu();
+
+    }
+    
+    unuseSpell(spell) {
+        if(this.spellsInUse.length > 1) {
+            const spellPos = this.spellsInUse.indexOf(spell);
+            this.spellsInUse.splice(spellPos, 1);
+        }
+        this.clearCanvas();
+        this.buildSpellsMenu();
     }
 
     setGameRulesText() {
