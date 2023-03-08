@@ -330,10 +330,20 @@ class Level {
         for(let i = 0; i < numberOfEnemies; i++) {
             let posX;
             let posY;
+            let canDeploy;
+
             do {
+                canDeploy = true;
                 posX = Math.random() * 80 + 10;
                 posY = Math.random() * 80 + 10;
-            } while(Math.abs(posX - this.player.positionX) < 20 && Math.abs(posY - this.player.positionY) < 20);
+
+                this.solidCollidablesArr.forEach(solid => {
+                    if((Math.abs(posX - solid.positionX) * this.canvasOnePercentWidth) < (solid.width + 5) && (Math.abs(posY - solid.positionY) * this.canvasOnePercentHeight) < (solid.height + 5)) {
+                        canDeploy = false;
+                    }
+                });
+
+            } while(!canDeploy);
 
             const newEnemy = new Enemy(this.canvasOnePercentWidth, this.canvasOnePercentHeight, 3, 1, posX, posY, [this.collidablesArr, this.solidCollidablesArr, this.enemiesArr], 20, this.spellsArr, this.enemyShootingId, this.player);
         }
