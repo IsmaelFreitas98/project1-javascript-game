@@ -90,6 +90,16 @@ h2 {
     color: green;
 }
 
+#buy-btn{
+    background-color: rgb(26, 26, 26);
+    margin: 2vw;
+    border: 1px solid rgb(176, 167, 0);
+    color: rgb(176, 167, 0);
+    font-size: 1vw;
+    border-radius: 0.5vw;
+    padding: 0.5vh 0.5vw;
+}
+
 #game-container {
     display: flex;
     width: 100%;
@@ -106,6 +116,11 @@ h2 {
     position: relative;
     overflow: hidden;
     box-shadow: 0 0 1vw rgb(176, 167, 0);
+}
+
+#canvas span {
+    font-size: 3vw;
+    font-weight: bold;
 }
 
 #player {

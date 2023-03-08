@@ -1,6 +1,6 @@
 //GameMenu-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 class GameMenu {
-    constructor(levelNumber, playerExp, spellOne, spellTwo) {
+    constructor(levelNumber, playerExp) {
         //DOM elements to manipulate
         this.playerInfo = document.getElementById("player-info");
         this.gameCanvas = document.getElementById("canvas");
@@ -11,8 +11,18 @@ class GameMenu {
 
         //Game and player information
         this.playerExp = playerExp;
-        this.spellOne = spellOne;
-        this.spellTwo = spellTwo;
+        
+        //Spells
+        this.basic = {name: "basic", power: 20, cooldown: 0.7, image: "./images/basic.png"};
+        this.stupefy = {name: "stupefy", power: 25, cooldown: 1.3, cost: 100, image: "./images/stupefy.png"};
+        this.expelliarmus = {name: "expelliarmus", power: 35, cooldown: 2, cost: 500, image: "./images/expelliarmus.png"};
+        this.reducto = {name: "reducto", power: 50, cooldown: 3, cost: 800, image: "./images/reducto.png"};
+        this.avada = {name: "avada", power: 100, cooldown: 5, cost: 3000, image: "./images/avada.png"};
+
+        //Locked, Unlocked, and spells in use
+        this.lockedSpells = [this.stupefy, this.expelliarmus, this.reducto, this.avada];
+        this.unlockedSpells = [];
+        this.spellsInUse = [];
 
 
         this.start();
@@ -55,7 +65,7 @@ class GameMenu {
         if(this.levelNumber > 1) {
              //Create and append Shop button
             const shopButtonElm = document.createElement("button");
-            shopButtonElm.innerText = "SHOP"
+            shopButtonElm.innerText = "Diagon Alley"
             shopButtonElm.classList += "btn";
             this.gameCanvas.appendChild(shopButtonElm);
 
@@ -67,7 +77,7 @@ class GameMenu {
              
             //Create and append Spells button
             const spellsButtonElm = document.createElement("button");
-            spellsButtonElm.innerText = "SPELLS"
+            spellsButtonElm.innerText = "Spells"
             spellsButtonElm.classList += "btn";
             this.gameCanvas.appendChild(spellsButtonElm);
 
@@ -93,9 +103,86 @@ class GameMenu {
     }
 
     buildShopMenu() {
+
+        //Update status and player info containers
+        const playerExp = document.getElementById("player-info");
+        const exp = document.createElement("p");
+        exp.innerText = `EXP: ${this.playerExp}`;
+        playerExp.appendChild(exp);
+
+        const titleContainer = document.getElementById("status-header");
+        titleContainer.innerText = "Diagon Alley"
+
+        const textContainer = document.getElementById("status-info");
+        const text = document.createElement("p");
+        text.innerText = `Welcome to the Spells Shop!
+        
+        - Here you can unlock spells using your earned Exp!
+        
+        - Click on the spells to get its details in this panel!`;
+        textContainer.appendChild(text);
+
+        //create spells container
+        const spellDisplayer = document.createElement("div");
+
+        //set its dimensions and display
+        spellDisplayer.style.width = "100%";
+        spellDisplayer.style.height = "80%";
+        spellDisplayer.style.display = "flex";
+        spellDisplayer.style.alignItems = "center";
+        spellDisplayer.style.justifyContent = "center";
+        this.gameCanvas.appendChild(spellDisplayer);
+
+        //get and display the spells
+        if(this.lockedSpells.length === 0){
+            const text = document.createElement("span");
+            text.innerText = "You already got all available spells!";
+            spellDisplayer.appendChild(text);
+        } else {
+
+            this.lockedSpells.forEach((spell) => {
+
+                const spellElm = document.createElement("div");
+                spellElm.style.backgroundImage = `url(${spell.image})`;
+                spellElm.style.backgroundSize = "cover";
+                spellElm.style.width = "15%";
+                spellElm.style.aspectRatio = "1 / 1";
+                spellElm.style.margin = "2vw";
+
+                spellDisplayer.appendChild(spellElm);
+
+                spellElm.addEventListener("click", () => {
+
+                    this.clearStatus();
+
+                    titleContainer.innerText = spell.name.toUpperCase();
+
+                    const text = document.createElement("p");
+                    text.innerText = `COST: ${spell.cost}Exp
+                    
+                    POWER: ${spell.power}HP
+                    
+                    COOLDOWN: ${spell.cooldown}s`;
+
+                    textContainer.appendChild(text);
+
+                    const buyBtn = document.createElement("button");
+                    buyBtn.setAttribute("id", "buy-btn");
+                    buyBtn.innerText = "Learn!";
+                    textContainer.appendChild(buyBtn);
+
+                    buyBtn.addEventListener("click", () => {
+                        this.learnSpell(spell);
+                    });
+
+                });
+
+            });
+        }
+
         //Create and append Return button
         const returnButtonElm = document.createElement("button");
-        returnButtonElm.innerText = "RETURN"
+        returnButtonElm.innerText = "Finish Shopping!"
         returnButtonElm.classList += "btn";
         this.returnBtn = returnButtonElm;
         this.gameCanvas.appendChild(returnButtonElm);
@@ -107,11 +194,38 @@ class GameMenu {
         })
 
     }
+
+    learnSpell(spell) {
+        if(this.playerExp >= spell.cost) {
+            this.playerExp -= spell.cost;
+
+            const spellPos = this.lockedSpells.indexOf(spell);
+            this.lockedSpells.splice(spellPos, 1);
+
+            this.unlockedSpells.push(spell);
+
+            this.clearCanvas();
+            this.buildShopMenu();
+        }
+    }
     
     buildSpellsMenu() {
+
+        //create spells container
+        const spellDisplayer = document.createElement("div");
+
+        //set its dimensions and display
+        spellDisplayer.style.width = "100%";
+        spellDisplayer.style.height = "80%";
+        spellDisplayer.style.display = "flex";
+        spellDisplayer.style.alignItems = "center";
+        spellDisplayer.style.justifyContent = "space-around";
+        spellDisplayer.style.backgroundColor = "blue";
+        this.gameCanvas.appendChild(spellDisplayer);
+
         //Create and append Return button
         const returnButtonElm = document.createElement("button");
-        returnButtonElm.innerText = "RETURN"
+        returnButtonElm.innerText = "SAVE"
         returnButtonElm.classList += "btn";
         this.returnBtn = returnButtonElm;
         this.gameCanvas.appendChild(returnButtonElm);
@@ -190,6 +304,11 @@ class GameMenu {
         this.gameCanvas.innerHTML = "";
         const rulesTextContainer = document.getElementById("player-info");
         rulesTextContainer.innerHTML = "";
+        const controlsTextContainer = document.getElementById("status-info");
+        controlsTextContainer.innerHTML = "";
+    }
+
+    clearStatus() {
         const controlsTextContainer = document.getElementById("status-info");
         controlsTextContainer.innerHTML = "";
     }
@@ -1107,4 +1226,4 @@ class Collider {
 /***********************************************************************************************************************************************************************************/
 
 //const myLevel = new Level();
-const myGame = new GameMenu();
+const myGame = new GameMenu(2, 10000);
