@@ -1,6 +1,6 @@
 //GameMenu-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 class GameMenu {
-    constructor(levelNumber, playerExp, lockedSpells, spellsInUse) {
+    constructor(levelNumber, playerExp, lockedSpells, unlockedSpells, spellsInUse) {
         //DOM elements to manipulate
         this.playerInfo = document.getElementById("player-info");
         this.gameCanvas = document.getElementById("canvas");
@@ -20,9 +20,9 @@ class GameMenu {
         this.avada = {name: "avada", power: 100, cooldown: 5, cost: 3000, image: "./images/avada.png"};
 
         //Locked, Unlocked, and spells in use
-        this.lockedSpells = [this.stupefy, this.expelliarmus, this.reducto, this.avada];
-        this.unlockedSpells = [this.basic];
-        this.spellsInUse = [this.basic];
+        this.lockedSpells = lockedSpells;
+        this.unlockedSpells = unlockedSpells;
+        this.spellsInUse = spellsInUse;
 
 
         this.start();
@@ -32,6 +32,11 @@ class GameMenu {
         //check arguments
         this.levelNumber = this.levelNumber ? this.levelNumber : 1;
         this.playerExp = this.playerExp ? this.playerExp : 0;
+        this.unlockedSpells = this.unlockedSpells ? this.unlockedSpells : [this.basic];
+        this.lockedSpells = this.lockedSpells ? this.lockedSpells : [this.stupefy, this.expelliarmus, this.reducto, this.avada];
+        this.spellsInUse = this.spellsInUse ? this.spellsInUse : [this.basic];
+
+
 
         //Build Main menu
         this.buildMainMenu();        
@@ -97,7 +102,7 @@ class GameMenu {
         //Add button listeners
         playButtonElm.addEventListener("click", () => {
             this.clearCanvas();
-            const newLevel = new Level(this.levelNumber, this.playerExp);
+            const newLevel = new Level(this.levelNumber, this.playerExp, this.lockedSpells, this.unlockedSpells, this.spellsInUse);
         });
         
     }
@@ -239,7 +244,7 @@ class GameMenu {
         - The spell with green shadow is selected to be your second key spell!
         
         - You can change your selection anytime between levels!`;
-        
+
         textContainer.appendChild(text);
 
         //create spells container
@@ -408,9 +413,18 @@ class GameMenu {
         const playerExp = document.createElement("p");
         playerExp.innerText = `EXP: ${this.playerExp} points`;
         playerInfoContainer.appendChild(playerExp);
-        
+
+        const primarySpell = this.spellsInUse[0].name.toUpperCase();
         const playerBuild = document.createElement("p");
-        playerBuild.innerText = `This will show the spells you have selected`;
+        playerBuild.innerText = `Primary Spell: ${primarySpell}`;
+
+        if(this.spellsInUse.length === 2) {
+            const secondarySpell = this.spellsInUse[1].name.toUpperCase();
+            playerBuild.innerText += `
+
+            Secondary Spell: ${secondarySpell}`;
+        }
+
         playerInfoContainer.appendChild(playerBuild);
     }
 
@@ -447,7 +461,7 @@ class GameMenu {
 //LevelBuilder---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 class Level {
 
-    constructor(levelNumber, playerExp) {
+    constructor(levelNumber, playerExp, lockedSpells, unlockedSpells, spellsInUse) {
         //to make scaling and moving elements possible
         this.gameCanvas = document.getElementById("canvas");
         this.canvasWidth = this.gameCanvas.clientWidth;
@@ -478,6 +492,9 @@ class Level {
         //To control level
         this.playerExp = playerExp;
         this.levelNumber = levelNumber;
+        this.unlockedSpells = unlockedSpells;
+        this.lockedSpells = lockedSpells;
+        this.spellsInUse = spellsInUse;
 
         //It is neccessary to store the function applied by the listeners, so we are able to remove them once the level is finished
         this.keyDown = (event) => {
@@ -667,8 +684,7 @@ class Level {
         returnButtonElm.addEventListener("click", () => {
             this.clearInfoContainers();
             this.clearCanvas();
-            const menu = new GameMenu(this.levelNumber, this.playerExp
-                );
+            const menu = new GameMenu(this.levelNumber, this.playerExp, this.lockedSpells, this.unlockedSpells, this.spellsInUse);
         })
     }
 
@@ -691,7 +707,7 @@ class Level {
         continueButtonElm.addEventListener("click", () => {
             this.clearInfoContainers();
             this.clearCanvas();
-            const menu = new GameMenu(this.levelNumber + 1, this.playerExp); 
+            const menu = new GameMenu(this.levelNumber + 1, this.playerExp, this.lockedSpells, this.unlockedSpells, this.spellsInUse); 
         })
     }
 
@@ -1357,4 +1373,4 @@ class Collider {
 /***********************************************************************************************************************************************************************************/
 
 //const myLevel = new Level();
-const myGame = new GameMenu(2, 10000);
+const myGame = new GameMenu(2, 50);
