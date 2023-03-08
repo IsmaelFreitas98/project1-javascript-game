@@ -177,8 +177,9 @@ class GameMenu {
         const infoText = document.createElement("p");
         infoText.innerText = `IN LEVEL ${this.levelNumber}:
 
+        - Deafeat ${this.levelNumber + 5} enemies to clear!
 
-        - Up to ${this.levelNumber} enemies;
+        - Up to ${this.levelNumber} enemies to fight at a time!
 
         - If you clear it you will get ${this.levelNumber * 50} Exp Points!`;
 
@@ -217,6 +218,9 @@ class Level {
         //To track time to spawn enemies
         this.spawnTimer = 0;
 
+        //To set level settings
+        this.killGoal;
+        this.maxEnemies;
         //To control game stops
         this.enemyShootingId = [];
         this.frameIntervalId;
@@ -265,6 +269,19 @@ class Level {
 
         //Add listeners for player input is its the first time the level is being instanced
         this.addListeners();
+
+        //Calculate level settings
+        if(this.levelNumber > 5) {
+            this.maxEnemies = 5;
+        } else {
+            this.maxEnemies = this.levelNumber;
+        }
+
+        this.killGoal = this.levelNumber + 4;
+
+        //Set Information panels
+        this.setPlayerInfo();
+        this.setStatusInfo();
                
         //initialize level frames cycle
         this.frameUpdate();
@@ -286,6 +303,7 @@ class Level {
     frameUpdate() {
 
         this.frameIntervalId = setInterval(() => {
+        
             //For player movement
             this.player.move();
 
@@ -296,10 +314,15 @@ class Level {
 
             //For enemy spawn
             this.spawnTimer += 16;
-            if(this.spawnTimer >= 2000 && this.enemiesArr.length < this.levelNumber) {
+            if(this.spawnTimer >= 2000 && this.enemiesArr.length < this.maxEnemies) {
                 this.placeEnemies(1);
                 this.spawnTimer = 0;
             }
+
+            //To update info panels
+            this.clearInfoContainers();
+            this.setPlayerInfo();
+            this.setStatusInfo();
 
             //Check vistory/defeat conditions
             this.checkStatus();
@@ -311,7 +334,7 @@ class Level {
     checkStatus() {
         
         //check for victory
-        if(this.player.killCount === 5) {
+        if(this.player.killCount === this.killGoal) {
             this.playerExp += this.levelNumber * 50;
             this.enemyShootingId.forEach(id => clearInterval(id));
             clearInterval(this.frameIntervalId);
@@ -350,6 +373,32 @@ class Level {
 
     }
 
+    setPlayerInfo() {
+        const playerTitleElm = document.getElementById("player-header");
+        playerTitleElm.innerText = "YOUR AUROR";
+
+        const playerInfoContainer = document.getElementById("player-info");
+        
+        const playerHp = document.createElement("p");
+        playerHp.innerText = `HP: ${this.player.healthPoints}`;
+        playerInfoContainer.appendChild(playerHp);
+        
+        const playerBuild = document.createElement("p");
+        playerBuild.innerText = `This will show the status of your spells`;
+        playerInfoContainer.appendChild(playerBuild);
+    }
+    
+    setStatusInfo() {
+        const statusTitleElm = document.getElementById("status-header");
+        statusTitleElm.innerText = `LEVEL ${this.levelNumber}`;
+
+        const levelInfoContainer = document.getElementById("status-info");
+        const killCountText = document.createElement("p");
+        killCountText.innerText = `KILLS LEFT: ${this.killGoal - this.player.killCount}`;
+        levelInfoContainer.appendChild(killCountText);
+        
+    }
+
     buildDefeatScreen() {
         //Message
         const messageElm = document.createElement("div");
@@ -366,6 +415,7 @@ class Level {
 
         //add listener
         returnButtonElm.addEventListener("click", () => {
+            this.clearInfoContainers();
             this.clearCanvas();
             const menu = new GameMenu(this.levelNumber, this.playerExp
                 );
@@ -389,11 +439,19 @@ class Level {
 
         //add listener
         continueButtonElm.addEventListener("click", () => {
+            this.clearInfoContainers();
             this.clearCanvas();
             const menu = new GameMenu(this.levelNumber + 1, this.playerExp); 
         })
     }
 
+    clearInfoContainers() {
+        const playerInfoContainer = document.getElementById("player-info");
+        playerInfoContainer.innerHTML = "";
+
+        const levelInfoContainer = document.getElementById("status-info");
+        levelInfoContainer.innerHTML = "";
+    }
     clearCanvas() {
         this.removeListeners();
         clearInterval(this.frameIntervalId);
@@ -545,12 +603,13 @@ class GameObject {
             const objectPos = this.relatedArrs[i].indexOf(this);
             this.relatedArrs[i].splice(objectPos, 1);
         }
+        
+        //Remove Collider from the levels
+        this.collider.removeCollider();
 
         //Remove from the DOM
         this.objectElm.remove();
 
-        //Remove Collider from the levels
-        this.collider.removeCollider();
     }
 
     setAtributes(type, name) {
@@ -812,8 +871,6 @@ class Player extends Wizard {
 
     incrementKillCount() {
         this.killCount++;
-
-        console.log(this.killCount);
     }
 }
 
@@ -876,10 +933,10 @@ class Enemy extends Wizard {
     }
 
     removeObject() {
-        super.removeObject();
         this.player.incrementKillCount();
         clearInterval(this.intervalId);
         this.canShoot = false;
+        super.removeObject();
     }
 }
 
