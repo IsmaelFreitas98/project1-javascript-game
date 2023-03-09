@@ -1,6 +1,6 @@
 //GameMenu-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 class GameMenu {
-    constructor(levelNumber, playerExp, lockedSpells, unlockedSpells, spellsInUse) {
+    constructor(levelNumber, playerExp, lockedSpells, unlockedSpells, spellsInUse, spellUpgradeArr) {
         //DOM elements to manipulate
         this.playerInfo = document.getElementById("player-info");
         this.gameCanvas = document.getElementById("canvas");
@@ -13,29 +13,41 @@ class GameMenu {
         this.playerExp = playerExp;
         
         //Spells
-        this.basic = {name: "basic", power: 20, cooldown: 0.7, image: "./images/basic.png"};
-        this.stupefy = {name: "stupefy", power: 25, cooldown: 1.3, cost: 100, image: "./images/stupefy.png"};
-        this.expelliarmus = {name: "expelliarmus", power: 35, cooldown: 2, cost: 500, image: "./images/expelliarmus.png"};
-        this.reducto = {name: "reducto", power: 50, cooldown: 3, cost: 800, image: "./images/reducto.png"};
-        this.avada = {name: "avada", power: 100, cooldown: 5, cost: 3000, image: "./images/avada.png"};
+        this.spellUpgradeArr = spellUpgradeArr;
+
+        this.basic = {name: "basic", power: 20, cooldown: 0.4, spellUpgrade: 0.02, upgradeCost: 20, upgradeArrPos: 0, maxLevel: 5, image: "./images/basic.png"};
+        this.stupefy = {name: "stupefy", power: 25, cooldown: 0.8, spellUpgrade: 0.08, upgradeCost: 50, upgradeArrPos: 1, maxLevel: 5, cost: 100, image: "./images/stupefy.png"};
+        this.expelliarmus = {name: "expelliarmus", power: 35, cooldown: 1.2, spellUpgrade: 0.1, upgradeCost: 100, upgradeArrPos: 2, maxLevel: 5, cost: 500, image: "./images/expelliarmus.png"};
+        this.reducto = {name: "reducto", power: 50, cooldown: 1.6, spellUpgrade: 0.15, upgradeCost: 170, upgradeArrPos: 3, maxLevel: 5, cost: 800, image: "./images/reducto.png"};
+        this.avada = {name: "avada", power: 100, cooldown: 2, spellUpgrade: 0.2, upgradeCost: 250, upgradeArrPos: 4, maxLevel: 5, cost: 3000, image: "./images/avada.png"};
 
         //Locked, Unlocked, and spells in use
-        this.lockedSpells = lockedSpells;
-        this.unlockedSpells = unlockedSpells;
-        this.spellsInUse = spellsInUse;
+        this.allSpells = [this.basic, this.stupefy, this.expelliarmus, this.reducto, this.avada];
 
+        this.lockedSpells = lockedSpells;
+        this.lockedSpellsNames;
+
+        this.unlockedSpells = unlockedSpells;
+        this.unlockedSpellsNames;
+
+        this.spellsInUse = spellsInUse;
+        this.spellsInUseNames;
 
         this.start();
     }
 
     start() {
         //check arguments
+        this.spellUpgradeArr = this.spellUpgradeArr ? this.spellUpgradeArr : [0, 0, 0, 0, 0];
         this.levelNumber = this.levelNumber ? this.levelNumber : 1;
         this.playerExp = this.playerExp ? this.playerExp : 0;
-        this.unlockedSpells = this.unlockedSpells ? this.unlockedSpells : [this.basic];
-        this.lockedSpells = this.lockedSpells ? this.lockedSpells : [this.stupefy, this.expelliarmus, this.reducto, this.avada];
-        this.spellsInUse = this.spellsInUse ? this.spellsInUse : [this.basic];
 
+        this.unlockedSpells = this.unlockedSpells ? this.unlockedSpells : [this.basic];
+
+        this.lockedSpells = this.lockedSpells ? this.lockedSpells : [this.stupefy, this.expelliarmus, this.reducto, this.avada];
+        this.lockedSpellsNames = this.lockedSpells.map(spell => spell.name);
+
+        this.spellsInUse = this.spellsInUse ? this.spellsInUse : [this.basic];
 
 
         //Build Main menu
@@ -102,7 +114,7 @@ class GameMenu {
         //Add button listeners
         playButtonElm.addEventListener("click", () => {
             this.clearCanvas();
-            const newLevel = new Level(this.levelNumber, this.playerExp, this.lockedSpells, this.unlockedSpells, this.spellsInUse);
+            const newLevel = new Level(this.levelNumber, this.playerExp, this.lockedSpells, this.unlockedSpells, this.spellsInUse, this.spellUpgradeArr);
         });
         
     }
@@ -139,41 +151,37 @@ class GameMenu {
         this.gameCanvas.appendChild(spellDisplayer);
 
         //get and display the spells
-        if(this.lockedSpells.length === 0){
-            const text = document.createElement("span");
-            text.innerText = "You already got all available spells!";
-            spellDisplayer.appendChild(text);
-        } else {
+        const spells = [];
 
-            const spells = [];
+        this.allSpells.forEach((spell) => {                
 
-            this.lockedSpells.forEach((spell) => {                
+            const spellElm = document.createElement("div");
+            spellElm.style.backgroundImage = `url(${spell.image})`;
+            spellElm.style.backgroundSize = "cover";
+            spellElm.style.width = "15%";
+            spellElm.style.aspectRatio = "1 / 1";
+            spellElm.style.margin = "2vw";
+            spellElm.style.borderRadius = "50%";
+            spellElm.style.boxShadow = "0 0 2vw rgb(176, 167, 0)";
 
-                const spellElm = document.createElement("div");
-                spellElm.style.backgroundImage = `url(${spell.image})`;
-                spellElm.style.backgroundSize = "cover";
-                spellElm.style.width = "15%";
-                spellElm.style.aspectRatio = "1 / 1";
-                spellElm.style.margin = "2vw";
-                spellElm.style.borderRadius = "50%";
-                spellElm.style.boxShadow = "0 0 2vw rgb(176, 167, 0)";
+            spellDisplayer.appendChild(spellElm);
+            const spellObj = {spell: spell, spellElm: spellElm};
+            spells.push(spellObj);
 
-                spellDisplayer.appendChild(spellElm);
-                spells.push(spellElm);
+            spellElm.addEventListener("click", () => {
+                //set all shadows
+                spells.forEach(spellObj => {
+                    spellObj.spellElm.style.boxShadow = "0 0 2vw rgb(176, 167, 0)";
+                });
 
-                spellElm.addEventListener("click", () => {
-                    //set all shadows
-                    spells.forEach(spell => {
-                        spell.style.boxShadow = "0 0 2vw rgb(176, 167, 0)";
-                    });
+                spellElm.style.boxShadow = "0 0 2vw rgb(207, 0, 0)";
+                this.clearStatus();
 
-                    spellElm.style.boxShadow = "0 0 2vw rgb(207, 0, 0)";
-                    this.clearStatus();
+                titleContainer.innerText = spell.name.toUpperCase();
 
-                    titleContainer.innerText = spell.name.toUpperCase();
-
+                if(this.lockedSpellsNames.includes(spell.name)) {
                     const text = document.createElement("p");
-                    text.innerText = `COST: ${spell.cost}Exp
+                    text.innerText = `COST: ${spell.cost}EXP
                     
                     POWER: ${spell.power}HP
                     
@@ -190,23 +198,56 @@ class GameMenu {
                         this.learnSpell(spell);
                     });
 
-                });
+                } else if(spell.maxLevel > this.spellUpgradeArr[spell.upgradeArrPos]){
+                    const text = document.createElement("p");
+                    text.innerText = `UPGRADE COOLDOWN:
+                    
+                    BEFORE: ${(spell.cooldown - spell.spellUpgrade * this.spellUpgradeArr[spell.upgradeArrPos]).toFixed(2)}s
+                    
+                    AFTER: ${(spell.cooldown - spell.spellUpgrade - spell.spellUpgrade * this.spellUpgradeArr[spell.upgradeArrPos]).toFixed(2)}s
+                    
+                    COST: ${spell.upgradeCost}EXP`;
+
+                    textContainer.appendChild(text);
+
+                    const buyBtn = document.createElement("button");
+                    buyBtn.setAttribute("id", "buy-btn");
+                    buyBtn.innerText = "Upgrade!";
+                    textContainer.appendChild(buyBtn);
+
+                    buyBtn.addEventListener("click", () => {
+                        this.upgradeSpell(spell);
+                    });
+
+                } else {
+                    const text = document.createElement("p");
+                    text.innerText = `Congratulations!
+                    
+                    You are a master using ${spell.name.toUpperCase()}!!!
+
+                    POWER: ${spell.power}HP 
+                    
+                    COOLDOWN: ${(spell.cooldown - spell.spellUpgrade * this.spellUpgradeArr[spell.upgradeArrPos]).toFixed(2)}s`;
+
+                    textContainer.appendChild(text);
+                }
 
             });
-        }
 
-        //Create and append Return button
-        const returnButtonElm = document.createElement("button");
-        returnButtonElm.innerText = "Finish Shopping!"
-        returnButtonElm.classList += "btn";
-        this.returnBtn = returnButtonElm;
-        this.gameCanvas.appendChild(returnButtonElm);
+        });
 
-        //add listener
-        this.returnBtn.addEventListener("click", () => {
-            this.clearCanvas();
-            this.buildMainMenu();
-        })
+    //Create and append Return button
+    const returnButtonElm = document.createElement("button");
+    returnButtonElm.innerText = "Finish Shopping!"
+    returnButtonElm.classList += "btn";
+    this.returnBtn = returnButtonElm;
+    this.gameCanvas.appendChild(returnButtonElm);
+
+    //add listener
+    this.returnBtn.addEventListener("click", () => {
+        this.clearCanvas();
+        this.buildMainMenu();
+    })
 
     }
 
@@ -216,12 +257,23 @@ class GameMenu {
 
             const spellPos = this.lockedSpells.indexOf(spell);
             this.lockedSpells.splice(spellPos, 1);
+            
+            const spellNamePos = this.lockedSpellsNames.indexOf(spell.name);
+            this.lockedSpellsNames.splice(spellNamePos, 1);
 
             this.unlockedSpells.push(spell);
 
             this.clearCanvas();
             this.buildShopMenu();
         }
+    }
+
+    upgradeSpell(spell) {
+        this.playerExp -= spell.upgradeCost;
+        this.spellUpgradeArr[spell.upgradeArrPos]++;
+
+        this.clearCanvas();
+        this.buildShopMenu();
     }
     
     buildSpellsMenu() {
@@ -308,7 +360,7 @@ class GameMenu {
                 const text = document.createElement("p");
                 text.innerText = `POWER: ${spell.power}HP
                 
-                COOLDOWN: ${spell.cooldown}s`;
+                COOLDOWN: ${(spell.cooldown - spell.spellUpgrade * this.spellUpgradeArr[spell.upgradeArrPos]).toFixed(2)}s`;
 
                 textContainer.appendChild(text);
 
@@ -399,7 +451,9 @@ class GameMenu {
         const controlsText = document.createElement("p");
         controlsText.innerText = ` - Use the arrows to move your Auror!
 
-        - Press Space to cast spells!`;
+        - Press Z to cast your Primary Spell!
+        
+        - Press X to cast your Secondary Spell!`;
 
         controlsTextContainer.appendChild(controlsText);
     }
@@ -436,7 +490,7 @@ class GameMenu {
         const infoText = document.createElement("p");
         infoText.innerText = `IN LEVEL ${this.levelNumber}:
 
-        - Deafeat ${this.levelNumber + 5} enemies to clear!
+        - Deafeat ${this.levelNumber + 1} enemies to clear!
 
         - Up to ${this.levelNumber} enemies to fight at a time!
 
@@ -461,7 +515,8 @@ class GameMenu {
 //LevelBuilder---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 class Level {
 
-    constructor(levelNumber, playerExp, lockedSpells, unlockedSpells, spellsInUse) {
+    constructor(levelNumber, playerExp, lockedSpells, unlockedSpells, spellsInUse, spellUpgradeArr) {
+
         //to make scaling and moving elements possible
         this.gameCanvas = document.getElementById("canvas");
         this.canvasWidth = this.gameCanvas.clientWidth;
@@ -477,7 +532,7 @@ class Level {
 
         //to keep track of player input
         this.arrowsPressed = [];
-        this.player = new Player(this.canvasOnePercentWidth, this.canvasOnePercentHeight, 3, 1, 50, 50, [this.collidablesArr, this.solidCollidablesArr], 20, this.spellsArr, this.arrowsPressed);
+        this.player = new Player(this.canvasOnePercentWidth, this.canvasOnePercentHeight, 3, 1, 50, 50, [this.collidablesArr, this.solidCollidablesArr], 20, this.spellsArr, spellUpgradeArr, this.arrowsPressed, spellsInUse);
 
         //To track time to spawn enemies
         this.spawnTimer = 0;
@@ -492,6 +547,7 @@ class Level {
         //To control level
         this.playerExp = playerExp;
         this.levelNumber = levelNumber;
+        this.spellUpgradeArr = spellUpgradeArr;
         this.unlockedSpells = unlockedSpells;
         this.lockedSpells = lockedSpells;
         this.spellsInUse = spellsInUse;
@@ -523,9 +579,12 @@ class Level {
             }
 
             //Check if spacebar was pressed to shoot spell (on keyup to avoid being called more than 1 time per press)
-            if(event.code === "Space") {
-                this.player.shootSpell();
-                console.log("Expeliarmus!");
+            if(event.code === "KeyZ") {
+                this.player.shootPrimary();
+            }
+            
+            if(event.code === "KeyX") {
+                this.player.shootSecondary();
             }
         }
 
@@ -544,7 +603,7 @@ class Level {
             this.maxEnemies = this.levelNumber;
         }
 
-        this.killGoal = this.levelNumber + 4;
+        this.killGoal = this.levelNumber + 1;
 
         //Set Information panels
         this.setPlayerInfo();
@@ -635,7 +694,7 @@ class Level {
 
             } while(!canDeploy);
 
-            const newEnemy = new Enemy(this.canvasOnePercentWidth, this.canvasOnePercentHeight, 3, 1, posX, posY, [this.collidablesArr, this.solidCollidablesArr, this.enemiesArr], 20, this.spellsArr, this.enemyShootingId, this.player);
+            const newEnemy = new Enemy(this.canvasOnePercentWidth, this.canvasOnePercentHeight, 3, 1, posX, posY, [this.collidablesArr, this.solidCollidablesArr, this.enemiesArr], 20, this.spellsArr, this.spellUpgradeArr, this.enemyShootingId, this.player);
         }
 
     }
@@ -651,7 +710,16 @@ class Level {
         playerInfoContainer.appendChild(playerHp);
         
         const playerBuild = document.createElement("p");
-        playerBuild.innerText = `This will show the status of your spells`;
+
+        const primaryStatus = this.player.canShootPrimary ? "READY!" : "Loading...";
+        const secondaryStatus = this.player.canShootSecondary ? "READY!" : "Loading...";
+
+        playerBuild.innerText = `${this.spellsInUse[0].name.toUpperCase()}: ${primaryStatus}`;
+        if(this.spellsInUse[1]) {
+            playerBuild.innerText += `
+        
+            ${this.spellsInUse[1].name.toUpperCase()}: ${secondaryStatus}`;
+        }
         playerInfoContainer.appendChild(playerBuild);
     }
     
@@ -684,7 +752,7 @@ class Level {
         returnButtonElm.addEventListener("click", () => {
             this.clearInfoContainers();
             this.clearCanvas();
-            const menu = new GameMenu(this.levelNumber, this.playerExp, this.lockedSpells, this.unlockedSpells, this.spellsInUse);
+            const menu = new GameMenu(this.levelNumber, this.playerExp, this.lockedSpells, this.unlockedSpells, this.spellsInUse, this.spellUpgradeArr);
         })
     }
 
@@ -707,7 +775,7 @@ class Level {
         continueButtonElm.addEventListener("click", () => {
             this.clearInfoContainers();
             this.clearCanvas();
-            const menu = new GameMenu(this.levelNumber + 1, this.playerExp, this.lockedSpells, this.unlockedSpells, this.spellsInUse); 
+            const menu = new GameMenu(this.levelNumber + 1, this.playerExp, this.lockedSpells, this.unlockedSpells, this.spellsInUse, this.spellUpgradeArr); 
         })
     }
 
@@ -718,6 +786,7 @@ class Level {
         const levelInfoContainer = document.getElementById("status-info");
         levelInfoContainer.innerHTML = "";
     }
+
     clearCanvas() {
         this.removeListeners();
         clearInterval(this.frameIntervalId);
@@ -810,9 +879,6 @@ class GameObject {
 
     }
 
-    changePosition() {
-    }
-
     setPosition() {
         //Calculet X and Y coordinates in absolute units
         this.positionXPix = Math.floor(this.positionX * this.canvasOnePercentWidth) - this.width / 2;
@@ -887,11 +953,11 @@ class GameObject {
 
 class Wizard extends GameObject {
 
-    constructor(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, relatedArrs, healthPoints, spellArr) {
+    constructor(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, relatedArrs, healthPoints, spellArr, spellUpgradeArr) {
         super(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, relatedArrs);
 
         //Wizards need health points
-        this.healthPoints = healthPoints;
+        this.healthPoints = 100;
 
         //Properties to create spells
         this.spellsArr = spellArr;
@@ -908,7 +974,10 @@ class Wizard extends GameObject {
         this.canMoveRight = true;
 
         //Tocheck if it can shoot
-        this.canShoot = true;
+        this.canShootPrimary = true;
+        this.canShootSecondary = true;
+        
+        this.spellUpgradeArr = spellUpgradeArr;
 
         this.setAtributes("class", "wizard");
     }
@@ -917,7 +986,7 @@ class Wizard extends GameObject {
         this.healthPoints -= damage;
 
         if(this.healthPoints <= 0) {
-            this.removeObject(this.collidablesArr);
+            this.removeObject();
         }
     }
 
@@ -974,19 +1043,95 @@ class Wizard extends GameObject {
         }
     }
 
-    shootSpell() {
-        if(this.canShoot) {
-            const newSpell = new Spell(this.canvasOnePercentWidth, this.canvasOnePercentHeight, 1, 1, (this.wandX / this.canvasOnePercentWidth), (this.wandY / this.canvasOnePercentHeight), [this.collidablesArr, this.spellsArr], 10, this.direction);
+    shootPrimary() {
+        if(this.canShootPrimary && this.spellsInUse) {
+            switch(this.spellsInUse[0].name) {
 
-            this.setCastCoolDown(newSpell);
+                case "basic":
+                    const newBasic = new BasicSpell(this.canvasOnePercentWidth, this.canvasOnePercentHeight, 1.7, 1, (this.wandX / this.canvasOnePercentWidth), (this.wandY / this.canvasOnePercentHeight), [this.collidablesArr, this.spellsArr], 10, this.direction, this.spellUpgradeArr);
+                    this.setCastCoolDownPrimary(newBasic);
+                    break;
+    
+                case "stupefy":
+                    const newStupefy = new Stupefy(this.canvasOnePercentWidth, this.canvasOnePercentHeight, 1.7, 1, (this.wandX / this.canvasOnePercentWidth), (this.wandY / this.canvasOnePercentHeight), [this.collidablesArr, this.spellsArr], 10, this.direction, this.spellUpgradeArr);
+                    this.setCastCoolDownPrimary(newStupefy);
+                    break;
+    
+                case "expelliarmus":
+                    const newExpelliarmus = new Expelliarmus(this.canvasOnePercentWidth, this.canvasOnePercentHeight, 1.7, 1, (this.wandX / this.canvasOnePercentWidth), (this.wandY / this.canvasOnePercentHeight), [this.collidablesArr, this.spellsArr], 10, this.direction, this.spellUpgradeArr);
+                    this.setCastCoolDownPrimary(newExpelliarmus);
+                    break;
+    
+                case "reducto":
+                    const newReducto = new Reducto(this.canvasOnePercentWidth, this.canvasOnePercentHeight, 1.7, 1, (this.wandX / this.canvasOnePercentWidth), (this.wandY / this.canvasOnePercentHeight), [this.collidablesArr, this.spellsArr], 10, this.direction, this.spellUpgradeArr);
+                    this.setCastCoolDownPrimary(newReducto);
+                    break;
+    
+                case "avada":
+                    const newAvada = new Avada(this.canvasOnePercentWidth, this.canvasOnePercentHeight, 1.7, 1, (this.wandX / this.canvasOnePercentWidth), (this.wandY / this.canvasOnePercentHeight), [this.collidablesArr, this.spellsArr], 10, this.direction, this.spellUpgradeArr);
+                    this.setCastCoolDownPrimary(newAvada);
+                    break;
+    
+                default:
+                    const newDefault = new BasicSpell(this.canvasOnePercentWidth, this.canvasOnePercentHeight, 1.7, 1, (this.wandX / this.canvasOnePercentWidth), (this.wandY / this.canvasOnePercentHeight), [this.collidablesArr, this.spellsArr], 10, this.direction, this.spellUpgradeArr);
+                    this.setCastCoolDownPrimary(newDefault);
+            }
+        } else if(this.canShootPrimary) {
+            const newBasic = new BasicSpell(this.canvasOnePercentWidth, this.canvasOnePercentHeight, 1.7, 1, (this.wandX / this.canvasOnePercentWidth), (this.wandY / this.canvasOnePercentHeight), [this.collidablesArr, this.spellsArr], 10, this.direction, this.spellUpgradeArr);
+            this.setCastCoolDownPrimary(newBasic);
+        }
+    }
+    
+    shootSecondary() {
+
+        if(this.canShootSecondary && this.spellsInUse[1]) {
+            switch(this.spellsInUse[1].name) {
+
+                case "basic":
+                    const newBasic = new BasicSpell(this.canvasOnePercentWidth, this.canvasOnePercentHeight, 1.7, 1, (this.wandX / this.canvasOnePercentWidth), (this.wandY / this.canvasOnePercentHeight), [this.collidablesArr, this.spellsArr], 10, this.direction, this.spellUpgradeArr);
+                    this.setCastCoolDownSecondary(newBasic);
+                    break;
+    
+                case "stupefy":
+                    const newStupefy = new Stupefy(this.canvasOnePercentWidth, this.canvasOnePercentHeight, 1.7, 1, (this.wandX / this.canvasOnePercentWidth), (this.wandY / this.canvasOnePercentHeight), [this.collidablesArr, this.spellsArr], 10, this.direction, this.spellUpgradeArr);
+                    this.setCastCoolDownSecondary(newStupefy);
+                    break;
+    
+                case "expelliarmus":
+                    const newExpelliarmus = new Expelliarmus(this.canvasOnePercentWidth, this.canvasOnePercentHeight, 1.7, 1, (this.wandX / this.canvasOnePercentWidth), (this.wandY / this.canvasOnePercentHeight), [this.collidablesArr, this.spellsArr], 10, this.direction, this.spellUpgradeArr);
+                    this.setCastCoolDownSecondary(newExpelliarmus);
+                    break;
+    
+                case "reducto":
+                    const newReducto = new Reducto(this.canvasOnePercentWidth, this.canvasOnePercentHeight, 1.7, 1, (this.wandX / this.canvasOnePercentWidth), (this.wandY / this.canvasOnePercentHeight), [this.collidablesArr, this.spellsArr], 10, this.direction, this.spellUpgradeArr);
+                    this.setCastCoolDownSecondary(newReducto);
+                    break;
+    
+                case "avada":
+                    const newAvada = new Avada(this.canvasOnePercentWidth, this.canvasOnePercentHeight, 1.7, 1, (this.wandX / this.canvasOnePercentWidth), (this.wandY / this.canvasOnePercentHeight), [this.collidablesArr, this.spellsArr], 10, this.direction, this.spellUpgradeArr);
+                    this.setCastCoolDownSecondary(newAvada);
+                    break;
+    
+                default:
+                    const newDefault = new BasicSpell(this.canvasOnePercentWidth, this.canvasOnePercentHeight, 1.7, 1, (this.wandX / this.canvasOnePercentWidth), (this.wandY / this.canvasOnePercentHeight), [this.collidablesArr, this.spellsArr], 10, this.direction, this.spellUpgradeArr);
+                    this.setCastCoolDownSecondary(newDefault);
+            }
         }
     }
 
-    setCastCoolDown(spell) {
-        this.canShoot = false;
+    setCastCoolDownPrimary(spell) {
+        this.canShootPrimary = false;
 
         setTimeout(() => {
-            this.canShoot = true;
+            this.canShootPrimary = true;
+        }, spell.coolDown * 1000);
+    }
+    
+    setCastCoolDownSecondary(spell) {
+        this.canShootSecondary = false;
+
+        setTimeout(() => {
+            this.canShootSecondary = true;
         }, spell.coolDown * 1000);
     }
 
@@ -1051,11 +1196,12 @@ class Wizard extends GameObject {
 
 class Player extends Wizard {
 
-    constructor(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, relatedArrs, healthPoints, spellArr, inputArr) {
-        super(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, relatedArrs, healthPoints, spellArr);
-        this.healthPoints = 20;
+    constructor(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, relatedArrs, healthPoints, spellArr, spellUpgradeArr, inputArr, spellsInUse) {
+        super(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, relatedArrs, healthPoints, spellArr, spellUpgradeArr);
+        this.healthPoints = 100;
         this.killCount = 0;
         this.inputArr = inputArr;
+        this.spellsInUse = spellsInUse;
         this.speed = 0.5;
         this.setAtributes("id", "player");
     }
@@ -1142,8 +1288,8 @@ class Player extends Wizard {
 
 class Enemy extends Wizard {
 
-    constructor(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, relatedArrs, healthPoints, spellArr, shootingArrId, player) {
-        super(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, relatedArrs, healthPoints, spellArr);
+    constructor(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, relatedArrs, healthPoints, spellArr, spellUpgradeArr, shootingArrId, player) {
+        super(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, relatedArrs, healthPoints, spellArr, spellUpgradeArr);
         this.setAtributes("class", "enemy");
 
         //Assign new enemy to the level's enemy array
@@ -1151,16 +1297,22 @@ class Enemy extends Wizard {
         this.enemiesArr.push(this);
 
         //to interact with player
-        this.player = player;        
+        this.player = player;
+
+        //to display hp for the player
+        this.remainingHp;
 
         //To make it shoot
         this.originX;
         this.originY;
         this.intervalId;
+        
         this.updateDirection();
         this.startShooting();
         shootingArrId.push(this.intervalId);
-
+        
+        this.createHpDisplayer();
+        this.updateHpDisplayer();
         
     }
 
@@ -1168,7 +1320,7 @@ class Enemy extends Wizard {
         this.intervalId = setInterval(() => {
             this.updateDirection();
             this.updateWandPosition();
-            this.shootSpell();
+            this.shootPrimary();
         }, 2000);
      }
 
@@ -1198,6 +1350,37 @@ class Enemy extends Wizard {
         return target;
     }
 
+    createHpDisplayer() {
+        this.remainingHp = document.createElement("span")
+        this.remainingHp.className = "hp-displayer";
+        this.remainingHp.style.fontSize = "0.8vw";
+        this.remainingHp.style.position = "absolute";
+        this.remainingHp.style.margin = "0";
+        this.remainingHp.style.textAlign = "center";
+        this.remainingHp.style.width = "100%";
+        
+
+        //position
+        let posX = 0;
+        let posY = this.height;
+
+        //place
+        this.remainingHp.style.left = posX + "px";
+        this.remainingHp.style.bottom = posY + "px";
+
+        this.objectElm.appendChild(this.remainingHp);
+    }
+
+    updateHpDisplayer() {
+        this.remainingHp.innerText = this.healthPoints;
+    }
+
+    takeDamage(damage) {
+        super.takeDamage(damage);
+
+        this.updateHpDisplayer();
+    }
+
     removeObject() {
         this.player.incrementKillCount();
         clearInterval(this.intervalId);
@@ -1209,12 +1392,15 @@ class Enemy extends Wizard {
 //--------------------------------------------------------
 class Spell extends GameObject {
 
-    constructor(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, relatedArrs, damage, direction) {
+    constructor(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, relatedArrs, damage, direction, spellUpgradeArr) {
         super(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, relatedArrs);
 
         //It is necessary to corect the spawn positon of the spell according to it's size, so it doenst affect the object that shoots it
         this.direction = direction;
         this.correctSpellPosition();
+
+        //Image
+        this.image;
 
         //Spell properties
         this.coolDown = 0.7;
@@ -1339,6 +1525,91 @@ class Spell extends GameObject {
 
 }
 
+class BasicSpell extends Spell {
+
+    constructor(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, relatedArrs, damage, direction, spellUpgradeArr) {
+        super(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, relatedArrs, damage, direction);
+
+        this.image = "./images/basic.png";
+        this.objectElm.style.backgroundColor = "transparent";
+        this.objectElm.style.backgroundImage = `url(${this.image})`;
+        this.objectElm.style.backgroundSize = "cover";
+
+        this.upgradeLevel = spellUpgradeArr[0];
+        this.upgradeImprovement = 0.02;
+        this.coolDown = (0.4 - this.upgradeImprovement * this.upgradeLevel).toFixed(2);
+        this.damage = 20;
+    }
+}
+
+class Stupefy extends Spell {
+
+    constructor(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, relatedArrs, damage, direction, spellUpgradeArr) {
+        super(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, relatedArrs, damage, direction);
+
+        this.image = "./images/stupefy.png"
+        this.objectElm.style.backgroundColor = "transparent";
+        this.objectElm.style.backgroundImage = `url(${this.image})`;
+        this.objectElm.style.backgroundSize = "cover";
+
+        this.upgradeLevel = spellUpgradeArr[1];
+        this.upgradeImprovement = 0.08;
+        this.coolDown = (0.8 - this.upgradeImprovement * this.upgradeLevel).toFixed(2);
+        this.damage = 25;
+    }
+}
+
+class Expelliarmus extends Spell {
+
+    constructor(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, relatedArrs, damage, direction, spellUpgradeArr) {
+        super(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, relatedArrs, damage, direction);
+
+        this.image = "./images/expelliarmus.png"
+        this.objectElm.style.backgroundColor = "transparent";
+        this.objectElm.style.backgroundImage = `url(${this.image})`;
+        this.objectElm.style.backgroundSize = "cover";
+
+        this.upgradeLevel = spellUpgradeArr[2];
+        this.upgradeImprovement = 0.1;
+        this.coolDown = (1.2 - this.upgradeImprovement * this.upgradeLevel).toFixed(2);
+        this.damage = 35;
+    }
+}
+
+class Reducto extends Spell {
+
+    constructor(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, relatedArrs, damage, direction, spellUpgradeArr) {
+        super(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, relatedArrs, damage, direction);
+
+        this.image = "./images/reducto.png"
+        this.objectElm.style.backgroundColor = "transparent";
+        this.objectElm.style.backgroundImage = `url(${this.image})`;
+        this.objectElm.style.backgroundSize = "cover";
+
+        this.upgradeLevel = spellUpgradeArr[3];
+        this.upgradeImprovement = 0.15;
+        this.coolDown = (1.6 - this.upgradeImprovement * this.upgradeLevel).toFixed(2);
+        this.damage = 50;
+    }
+}
+
+class Avada extends Spell {
+
+    constructor(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, relatedArrs, damage, direction, spellUpgradeArr) {
+        super(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, relatedArrs, damage, direction);
+
+        this.image = "./images/avada.png"
+        this.objectElm.style.backgroundColor = "transparent";
+        this.objectElm.style.backgroundImage = `url(${this.image})`;
+        this.objectElm.style.backgroundSize = "cover";
+
+        this.upgradeLevel = spellUpgradeArr[4];
+        this.upgradeImprovement = 0.2;
+        this.coolDown = (2 - this.upgradeImprovement * this.upgradeLevel).toFixed(2);
+        this.damage = 100;
+    }
+}
+
 //Utility Classes----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 class Collider {
@@ -1373,4 +1644,4 @@ class Collider {
 /***********************************************************************************************************************************************************************************/
 
 //const myLevel = new Level();
-const myGame = new GameMenu(2, 50);
+const myGame = new GameMenu();

@@ -34,7 +34,7 @@ h2 {
 
 .spell {
     position: absolute;
-    background-color: yellow;
+    border-radius: 50%;
 }
 
 .btn {
