@@ -264,7 +264,6 @@ class GameMenu {
             
             const spellNamePos = this.lockedSpellsNames.indexOf(spell.name);
             this.lockedSpellsNames.splice(spellNamePos, 1);
-            console.log(this.lockedSpellsNames);
 
             this.updateLockedSpells();
 
@@ -964,8 +963,12 @@ class GameObject {
         
         //Remove the object from the arrays it belongs to
         for(let i = 0; i < this.relatedArrs.length; i++) {
+
             const objectPos = this.relatedArrs[i].indexOf(this);
-            this.relatedArrs[i].splice(objectPos, 1);
+
+            if(objectPos !== -1) {
+                this.relatedArrs[i].splice(objectPos, 1);
+            }
         }
     }
 
@@ -1420,7 +1423,7 @@ class Spell extends GameObject {
     constructor(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, relatedArrs, damage, direction, spellUpgradeArr) {
         super(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, relatedArrs);
 
-        //It is necessary to corect the spawn positon of the spell according to it's size, so it doenst affect the object that shoots it
+        //It is necessary to correct the spawn positon of the spell according to it's size, so it doenst affect the object that shoots it
         this.direction = direction;
         this.correctSpellPosition();
 
@@ -1539,10 +1542,10 @@ class Spell extends GameObject {
 
     manageCollision(otherObject) {
        
-        if (otherObject.collider.tag !== "spell") {
-            otherObject.takeDamage(this.damage);        
-        } else if(otherObject.collider.tag === "spell") {
+        if (otherObject.collider.tag === "spell") {
             otherObject.removeObject();
+        } else if(otherObject.collider.tag !== "spell") {
+            otherObject.takeDamage(this.damage);        
         }
 
         this.removeObject();
