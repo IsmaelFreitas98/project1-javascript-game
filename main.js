@@ -1,5 +1,6 @@
 //GameMenu-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 class GameMenu {
+
     constructor(levelNumber, playerExp, lockedSpells, unlockedSpells, spellsInUse, spellUpgradeArr) {
         //DOM elements to manipulate
         this.playerInfo = document.getElementById("player-info");
@@ -48,7 +49,6 @@ class GameMenu {
         this.lockedSpellsNames = this.lockedSpells.map(spell => spell.name);
 
         this.spellsInUse = this.spellsInUse ? this.spellsInUse : [this.basic];
-
 
         //Build Main menu
         this.buildMainMenu();        
@@ -201,6 +201,8 @@ class GameMenu {
                 } else if(spell.maxLevel > this.spellUpgradeArr[spell.upgradeArrPos]){
                     const text = document.createElement("p");
                     text.innerText = `UPGRADE COOLDOWN:
+
+                    NEXT LEVEL: ${this.spellUpgradeArr[spell.upgradeArrPos] + 1}
                     
                     BEFORE: ${(spell.cooldown - spell.spellUpgrade * this.spellUpgradeArr[spell.upgradeArrPos]).toFixed(2)}s
                     
@@ -254,12 +256,12 @@ class GameMenu {
     learnSpell(spell) {
         if(this.playerExp >= spell.cost) {
             this.playerExp -= spell.cost;
-
-            const spellPos = this.lockedSpells.indexOf(spell);
-            this.lockedSpells.splice(spellPos, 1);
             
             const spellNamePos = this.lockedSpellsNames.indexOf(spell.name);
             this.lockedSpellsNames.splice(spellNamePos, 1);
+            console.log(this.lockedSpellsNames);
+
+            this.updateLockedSpells();
 
             this.unlockedSpells.push(spell);
 
@@ -268,12 +270,18 @@ class GameMenu {
         }
     }
 
-    upgradeSpell(spell) {
-        this.playerExp -= spell.upgradeCost;
-        this.spellUpgradeArr[spell.upgradeArrPos]++;
+    updateLockedSpells() {
+        this.lockedSpells = this.lockedSpells.filter(spell => this.lockedSpellsNames.includes(spell.name));
+    }
 
-        this.clearCanvas();
-        this.buildShopMenu();
+    upgradeSpell(spell) {
+        
+        if(this.playerExp - spell.upgradeCost >= 0) {
+            this.playerExp -= spell.upgradeCost;
+            this.spellUpgradeArr[spell.upgradeArrPos]++;
+            this.clearCanvas();
+            this.buildShopMenu();
+        }
     }
     
     buildSpellsMenu() {
@@ -358,7 +366,9 @@ class GameMenu {
                 titleContainer.innerText = spell.name.toUpperCase();
 
                 const text = document.createElement("p");
-                text.innerText = `POWER: ${spell.power}HP
+                text.innerText = `LEVEL: ${this.spellUpgradeArr[spell.upgradeArrPos]}
+                
+                POWER: ${spell.power}HP
                 
                 COOLDOWN: ${(spell.cooldown - spell.spellUpgrade * this.spellUpgradeArr[spell.upgradeArrPos]).toFixed(2)}s`;
 
@@ -1644,4 +1654,4 @@ class Collider {
 /***********************************************************************************************************************************************************************************/
 
 //const myLevel = new Level();
-const myGame = new GameMenu();
+const myGame = new GameMenu(2, 10000);
