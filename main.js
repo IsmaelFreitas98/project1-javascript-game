@@ -1255,7 +1255,7 @@ class Wizard extends GameObject {
     fadeIn() {
         let i = 1;
         let timeCounter = 0;
-        let speed = 40;
+        let speed = 50;
 
         this.objectElm.style.backgroundImage = `url(${this.spriteArr[0]})`;
         
@@ -1275,7 +1275,7 @@ class Wizard extends GameObject {
     fadeOut() {
         let i = 1;
         let timeCounter = 0;
-        let speed = 40;
+        let speed = 50;
 
         this.objectElm.style.backgroundImage = `url(${this.spriteArr[this.spriteArr.length - 1]})`;
         
@@ -1306,8 +1306,12 @@ class Player extends Wizard {
         this.speed = 0.5;
         this.setAtributes("id", "player");
 
+        this.aim;
+
         this.spriteArr = ["./images/player1.png", "./images/player2.png", "./images/player3.png", "./images/player4.png", "./images/player.png"];
         this.fadeIn();
+        this.updateWandPosition();
+        this.createAimPoint();
     }
 
     changePosition() {
@@ -1378,6 +1382,81 @@ class Player extends Wizard {
         }
 
         this.updateWandPosition();
+    }
+
+    createAimPoint() {
+        this.aim = document.createElement("div");
+        this.aim.innerText = "*";
+        this.aim.style.position = "absolute";
+        this.aim.style.fontSize = "1vw";
+        this.aim.style.width = "100%";
+        this.aim.style.textAlign = "center";
+        this.aim.style.margin = "0";
+        
+        this.objectElm.appendChild(this.aim);
+        this.setAimPointPosition();
+        console.log(this.direction);
+
+
+    }
+
+    setAimPointPosition() {
+
+        let posX = this.wandX - this.positionXPix - this.aim.clientWidth / 2;        
+        let posY = this.wandY - this.positionYPix - this.aim.clientHeight / 2;
+
+        switch (this.direction) {
+            case "up":
+                posY += this.aim.clientHeight / 2;
+                break;
+
+            case "down":
+                posY -= this.aim.clientHeight / 2;
+                break;
+
+            case "left":
+                posX -= this.aim.clientWidth / 2;
+                break;
+
+            case "right":
+                posX += this.aim.clientWidth / 2;
+                break;
+
+            case "upLeft":
+                posY += this.aim.clientHeight / 2;
+                posX -= this.aim.clientWidth / 2;
+                break;
+
+            case "downLeft":
+                posY -= this.aim.clientHeight / 2;
+                posX -= this.aim.clientWidth / 2;
+                break;
+
+            case "upRight":
+                posY += this.aim.clientHeight / 2;
+                posX += this.aim.clientWidth / 2;
+                break;
+
+            case "downRight":
+                posY -= this.aim.clientHeight / 2;
+                posX += this.aim.clientWidth / 2;
+                break;
+
+            default:
+                console.log("Invalid Direction");
+        }
+
+        this.aim.style.left = posX + "px";
+        this.aim.style.bottom = posY + "px";
+
+    }
+
+    updateWandPosition() {
+        super.updateWandPosition();
+        
+        if(this.aim) {
+            this.setAimPointPosition();
+        }
     }
 
     removeObject() {
@@ -1569,8 +1648,17 @@ class Spell extends GameObject {
                 break;
 
             default:
-                this.positionX = (this.positionXPix + (this.direction[0] * 3 * this.width)) / this.canvasOnePercentWidth;
-                this.positionY = (this.positionYPix + (this.direction[1] * 3 * this.height)) / this.canvasOnePercentHeight;
+                if(this.direction[0] > 0) {
+                    this.positionX = (this.positionXPix + (this.direction[0] * 3 * this.width)) / this.canvasOnePercentWidth;
+                } else {
+                    this.positionX = (this.positionXPix + (this.direction[0] * 1.5 * this.width)) / this.canvasOnePercentWidth;
+                }
+                
+                if(this.direction[1] > 0) {
+                    this.positionY = (this.positionYPix + (this.direction[1] * 3 * this.height)) / this.canvasOnePercentHeight;
+                } else {
+                    this.positionY = (this.positionYPix + (this.direction[1] * 1.5 * this.height)) / this.canvasOnePercentHeight;
+                }               
 
         }
 
@@ -1617,15 +1705,15 @@ class Spell extends GameObject {
                 break;
 
             default:
-                this.positionX += this.direction[0] * this.speed;
-                this.positionY += this.direction[1] * this.speed * this.verticalSpeed;
+                this.positionX += this.speed * this.direction[0];
+                this.positionY += this.speed * this.direction[1] * this.verticalSpeed;
         }
 
         if(this.positionY < 0 || this.positionY > 100){
-            this.removeObject(this.collidablesArr, this.spellsArr);
+            this.removeObject();
         }
         if(this.positionX < 0 || this.positionX > 100){
-            this.removeObject(this.collidablesArr, this.spellsArr);
+            this.removeObject();
         }
     }
 
