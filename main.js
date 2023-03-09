@@ -955,18 +955,18 @@ class GameObject {
     }
 
     removeObject() {
+        
+        //Remove Collider from the levels
+        this.collider.removeCollider();
+        
+        //Remove from the DOM
+        this.objectElm.remove();
+        
         //Remove the object from the arrays it belongs to
         for(let i = 0; i < this.relatedArrs.length; i++) {
             const objectPos = this.relatedArrs[i].indexOf(this);
             this.relatedArrs[i].splice(objectPos, 1);
         }
-        
-        //Remove Collider from the levels
-        this.collider.removeCollider();
-
-        //Remove from the DOM
-        this.objectElm.remove();
-
     }
 
     setAtributes(type, name) {
