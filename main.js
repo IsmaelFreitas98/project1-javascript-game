@@ -553,7 +553,7 @@ class GameMenu {
 
         - Up to ${maxEnemies} enemies to fight at a time!
 
-        - If you clear it you will get ${this.levelNumber * 50} Exp Points!`;
+        - If you clear it you will get ${this.levelNumber * 50 + 50} Exp Points!`;
 
         levelInfoContainer.appendChild(infoText);
     }
@@ -723,7 +723,7 @@ class Level {
         
         //check for victory
         if(this.player.killCount === this.killGoal) {
-            this.playerExp += this.levelNumber * 50;
+            this.playerExp += this.levelNumber * 50 + 50;
             this.enemyShootingId.forEach(id => clearInterval(id));
             clearInterval(this.frameIntervalId);
             this.clearCanvas();
@@ -1057,6 +1057,7 @@ class Wizard extends GameObject {
     }
 
     takeDamage(damage) {
+        new Audio("./sounds/player-damage.mp3").play();
         this.healthPoints -= damage;
 
         if(this.healthPoints <= 0) {
