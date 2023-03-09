@@ -1029,6 +1029,9 @@ class Wizard extends GameObject {
         this.canMoveLeft = true;
         this.canMoveRight = true;
 
+        //For animations
+        this.spriteArr;
+
         //Tocheck if it can shoot
         this.canShootPrimary = true;
         this.canShootSecondary = true;
@@ -1248,6 +1251,48 @@ class Wizard extends GameObject {
 
         });
     }
+
+    fadeIn() {
+        let i = 1;
+        let timeCounter = 0;
+        let speed = 40;
+
+        this.objectElm.style.backgroundImage = `url(${this.spriteArr[0]})`;
+        
+        const animationId = setInterval(() => {
+            this.objectElm.style.backgroundImage = `url(${this.spriteArr[i]})`;
+
+            i++;
+            timeCounter += speed;
+
+            if(timeCounter === speed * (this.spriteArr.length - 1)) {
+                clearInterval(animationId);
+            }
+
+        }, speed);
+    }
+    
+    fadeOut() {
+        let i = 1;
+        let timeCounter = 0;
+        let speed = 40;
+
+        this.objectElm.style.backgroundImage = `url(${this.spriteArr[this.spriteArr.length - 1]})`;
+        
+        const animationId = setInterval(() => {
+            
+            this.objectElm.style.backgroundImage = `url(${this.spriteArr[this.spriteArr.length - 1 - i]})`;
+
+            i++;
+            timeCounter += speed;
+
+            if(timeCounter === speed * (this.spriteArr.length - 1)) {
+                clearInterval(animationId);
+                this.fadeOutMethod();
+            }
+
+        }, speed);
+    }
 }
 
 class Player extends Wizard {
@@ -1260,6 +1305,9 @@ class Player extends Wizard {
         this.spellsInUse = spellsInUse;
         this.speed = 0.5;
         this.setAtributes("id", "player");
+
+        this.spriteArr = ["./images/player1.png", "./images/player2.png", "./images/player3.png", "./images/player4.png", "./images/player.png"];
+        this.fadeIn();
     }
 
     changePosition() {
@@ -1333,12 +1381,16 @@ class Player extends Wizard {
     }
 
     removeObject() {
-        super.removeObject();
-        this.canShoot = false;
+        this.fadeOut();
     }
 
     incrementKillCount() {
         this.killCount++;
+    }
+
+    fadeOutMethod() {
+        super.removeObject();
+        this.canShoot = false;
     }
 }
 
@@ -1363,12 +1415,15 @@ class Enemy extends Wizard {
         this.originY;
         this.intervalId;
         
-        this.updateDirection();
-        this.startShooting();
-        shootingArrId.push(this.intervalId);
-        
         this.createHpDisplayer();
         this.updateHpDisplayer();
+
+        this.updateDirection();
+        this.startShooting();
+        shootingArrId.push(this.intervalId);        
+
+        this.spriteArr = ["./images/enemy1.png", "./images/enemy2.png", "./images/enemy3.png", "./images/enemy4.png", "./images/enemy.png"];
+        this.fadeIn();
         
     }
 
@@ -1438,6 +1493,10 @@ class Enemy extends Wizard {
     }
 
     removeObject() {
+        this.fadeOut();
+    }
+
+    fadeOutMethod() {
         this.player.incrementKillCount();
         clearInterval(this.intervalId);
         this.canShoot = false;

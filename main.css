@@ -29,7 +29,6 @@ h2 {
 
 .enemy {
     position: absolute;
-    background-image: url("./images/enemy.png");
     background-size: cover;
 }
 
@@ -140,6 +139,5 @@ h2 {
 
 #player {
     position: absolute;
-    background-image: url("./images/player.png");
     background-size: cover;
 }
