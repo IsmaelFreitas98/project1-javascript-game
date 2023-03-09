@@ -29,7 +29,8 @@ h2 {
 
 .enemy {
     position: absolute;
-    background-color: red;
+    background-image: url("./images/enemy.png");
+    background-size: cover;
 }
 
 .spell {
@@ -82,12 +83,16 @@ h2 {
 
 .defeat {
     font-size: 6vh;
-    color: red;
+    font-style: italic;
+    color: #442200;
+    font-weight: bolder;
 }
 
 .victory {
     font-size: 6vh;
-    color: green;
+    font-style: italic;
+    color: #442200;
+    font-weight: bolder;
 }
 
 #buy-btn{
@@ -110,12 +115,22 @@ h2 {
 #canvas {
     flex-grow: 3;
     height: 100%;
-    background-color: gray;
+    background-image: url("./images/canvas-background.png");
+    background-size: cover;
     border: 5px solid rgb(0, 0, 0);
     border-radius: 1vw;
     position: relative;
     overflow: hidden;
     box-shadow: 0 0 1vw rgb(176, 167, 0);
+    color: #442200;
+}
+
+#canvas .btn {
+    border-color: #693500;
+    color: #442200;
+    font-style: italic;
+    font-weight: bolder;
+    background-color: rgba(105, 53, 0, 0.3);
 }
 
 #canvas span {
@@ -125,5 +140,6 @@ h2 {
 
 #player {
     position: absolute;
-    background-color: blue;
+    background-image: url("./images/player.png");
+    background-size: cover;
 }

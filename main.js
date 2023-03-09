@@ -68,6 +68,31 @@ class GameMenu {
             this.setNextLevelInfo();
         }
 
+        // Create game greeting
+        if(this.levelNumber === 1) {
+            const greeting = document.createElement("div");
+            greeting.style.backgroundImage = `url("./images/greeting.png")`;
+            greeting.style.backgroundPosition = `center`;
+            greeting.style.backgroundSize = `contain`;
+            greeting.style.backgroundRepeat = `no-repeat`;
+            greeting.style.width = "100%";
+            greeting.style.height = "20%";
+
+            this.gameCanvas.appendChild(greeting);
+            
+            const greetingImage = document.createElement("div");
+            greetingImage.style.backgroundImage = `url("./images/greeting-image.png")`;
+            greetingImage.style.backgroundPosition = `center`;
+            greetingImage.style.backgroundSize = `contain`;
+            greetingImage.style.backgroundRepeat = `no-repeat`;
+            greetingImage.style.width = "100%";
+            greetingImage.style.height = "50%";
+
+            this.gameCanvas.appendChild(greetingImage);
+
+
+        }
+
         //Create and append Play button
         const playButtonElm = document.createElement("button");
         if(this.levelNumber === 1){
@@ -167,7 +192,7 @@ class GameMenu {
             spellElm.style.aspectRatio = "1 / 1";
             spellElm.style.margin = "2vw";
             spellElm.style.borderRadius = "50%";
-            spellElm.style.boxShadow = "0 0 2vw rgb(176, 167, 0)";
+            spellElm.style.boxShadow = "0 0 2vw #693500";
 
             spellDisplayer.appendChild(spellElm);
             const spellObj = {spell: spell, spellElm: spellElm};
@@ -176,7 +201,7 @@ class GameMenu {
             spellElm.addEventListener("click", () => {
                 //set all shadows
                 spells.forEach(spellObj => {
-                    spellObj.spellElm.style.boxShadow = "0 0 2vw rgb(176, 167, 0)";
+                    spellObj.spellElm.style.boxShadow = "0 0 2vw #693500";
                 });
 
                 spellElm.style.boxShadow = "0 0 2vw rgb(207, 0, 0)";
@@ -819,16 +844,19 @@ class Level {
     }
 }
 
-//Game Objects------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-//Inheritance Map:
+//Game Objects' Inheritance Map------------------------------------------------------------------------------------------------------------------------------------------------------------
 //                             --> Player
 //               --> Wizards -->
 //                             --> Enemy
 // GameObject -->
-//
-//               --> Spell
+//                         --> Avada   
+//                         --> Reducto  
+//               --> Spell --> Expelliarmus 
+//                         --> Stupefy
+//                         --> BasicSpell
 //
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 class GameObject {
     constructor(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, relatedArrs) {
         //Store canvas dimension to access in methods
@@ -1429,6 +1457,8 @@ class Spell extends GameObject {
 
         //Image
         this.image;
+
+        this.objectElm.style.boxShadow = "0 0 1vw #693500";
 
         //Spell properties
         this.coolDown = 0.7;
