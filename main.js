@@ -113,6 +113,7 @@ class GameMenu {
 
             //Add Shop button Listener
             shopButtonElm.addEventListener("click", () => {
+                new Audio("./sounds/click.mp3").play();
                 this.clearCanvas();
                 this.buildShopMenu();
             });
@@ -125,6 +126,7 @@ class GameMenu {
 
             //Add Spells button listener
             spellsButtonElm.addEventListener("click", () => {
+                new Audio("./sounds/click.mp3").play();
                 this.clearCanvas();
                 this.buildSpellsMenu();
             });
@@ -138,6 +140,7 @@ class GameMenu {
 
         //Add button listeners
         playButtonElm.addEventListener("click", () => {
+            new Audio("./sounds/click.mp3").play();
             this.clearCanvas();
             const newLevel = new Level(this.levelNumber, this.playerExp, this.lockedSpells, this.unlockedSpells, this.spellsInUse, this.spellUpgradeArr);
         });
@@ -193,12 +196,14 @@ class GameMenu {
             spellElm.style.margin = "2vw";
             spellElm.style.borderRadius = "50%";
             spellElm.style.boxShadow = "0 0 2vw #693500";
+            spellElm.style.cursor = "pointer";
 
             spellDisplayer.appendChild(spellElm);
             const spellObj = {spell: spell, spellElm: spellElm};
             spells.push(spellObj);
 
             spellElm.addEventListener("click", () => {
+                new Audio("./sounds/click.mp3").play();
                 //set all shadows
                 spells.forEach(spellObj => {
                     spellObj.spellElm.style.boxShadow = "0 0 2vw #693500";
@@ -277,6 +282,7 @@ class GameMenu {
 
     //add listener
     this.returnBtn.addEventListener("click", () => {
+        new Audio("./sounds/click.mp3").play();
         this.clearCanvas();
         this.buildMainMenu();
     })
@@ -285,6 +291,7 @@ class GameMenu {
 
     learnSpell(spell) {
         if(this.playerExp >= spell.cost) {
+            new Audio("./sounds/spell-action.mp3").play();
             this.playerExp -= spell.cost;
             
             const spellNamePos = this.lockedSpellsNames.indexOf(spell.name);
@@ -306,6 +313,7 @@ class GameMenu {
     upgradeSpell(spell) {
         
         if(this.playerExp - spell.upgradeCost >= 0) {
+            new Audio("./sounds/spell-action.mp3").play();
             this.playerExp -= spell.upgradeCost;
             this.spellUpgradeArr[spell.upgradeArrPos]++;
             this.clearCanvas();
@@ -364,6 +372,7 @@ class GameMenu {
             spellElm.style.aspectRatio = "1 / 1";
             spellElm.style.margin = "2vw";
             spellElm.style.borderRadius = "50%";
+            spellElm.style.cursor = "pointer";
 
             
             if(this.spellsInUse.includes(spell)) {
@@ -380,6 +389,7 @@ class GameMenu {
             spells.push(spellObj);
 
             spellElm.addEventListener("click", () => {
+                new Audio("./sounds/click.mp3").play();
 
                 spells.forEach(spellObj => {
                     if(this.spellsInUse.includes(spellObj.spell)) {
@@ -441,6 +451,7 @@ class GameMenu {
 
         //add listener
         this.returnBtn.addEventListener("click", () => {
+            new Audio("./sounds/click.mp3").play();
             this.clearCanvas();
             this.buildMainMenu();
         })
@@ -448,7 +459,7 @@ class GameMenu {
     }
 
     useSpell(spell) {
-
+        new Audio("./sounds/spell-action.mp3").play();
         if(this.spellsInUse.length < 2) {
             this.spellsInUse.push(spell);
         } else {
@@ -463,6 +474,7 @@ class GameMenu {
     
     unuseSpell(spell) {
         if(this.spellsInUse.length > 1) {
+            new Audio("./sounds/spell-action.mp3").play();
             const spellPos = this.spellsInUse.indexOf(spell);
             this.spellsInUse.splice(spellPos, 1);
         }
@@ -497,7 +509,8 @@ class GameMenu {
 
         - Press Z to cast your Primary Spell!
         
-        - Press X to cast your Secondary Spell!`;
+        - Press X to cast your Secondary Spell!
+        (Not available in the first level)`;
 
         controlsTextContainer.appendChild(controlsText);
     }
@@ -799,6 +812,7 @@ class Level {
 
         //add listener
         returnButtonElm.addEventListener("click", () => {
+            new Audio("./sounds/spell-cast.mp3").play();
             this.clearInfoContainers();
             this.clearCanvas();
             const menu = new GameMenu(this.levelNumber, this.playerExp, this.lockedSpells, this.unlockedSpells, this.spellsInUse, this.spellUpgradeArr);
@@ -822,6 +836,7 @@ class Level {
 
         //add listener
         continueButtonElm.addEventListener("click", () => {
+            new Audio("./sounds/spell-cast.mp3").play();
             this.clearInfoContainers();
             this.clearCanvas();
             const menu = new GameMenu(this.levelNumber + 1, this.playerExp, this.lockedSpells, this.unlockedSpells, this.spellsInUse, this.spellUpgradeArr); 
@@ -1273,6 +1288,7 @@ class Wizard extends GameObject {
     }
     
     fadeOut() {
+        new Audio("./sounds/wizard-die.mp3").play();
         let i = 1;
         let timeCounter = 0;
         let speed = 50;
@@ -1605,7 +1621,8 @@ class Spell extends GameObject {
         this.speed = 1;
         this.setAtributes("class", "spell");
         this.spellsArr.push(this);
-
+        
+        new Audio("./sounds/spell-cast.mp3").play();
     }
 
     correctSpellPosition() {
