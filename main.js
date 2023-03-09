@@ -139,12 +139,17 @@ class GameMenu {
         - Click on the spells to get its details in this panel!`;
         textContainer.appendChild(text);
 
+        //Create header
+        const shopHeader = document.createElement("h1");
+        shopHeader.innerText = "Welcome to Diagon Alley!";
+        this.gameCanvas.appendChild(shopHeader);
+
         //create spells container
         const spellDisplayer = document.createElement("div");
 
         //set its dimensions and display
         spellDisplayer.style.width = "100%";
-        spellDisplayer.style.height = "80%";
+        spellDisplayer.style.height = "60%";
         spellDisplayer.style.display = "flex";
         spellDisplayer.style.alignItems = "center";
         spellDisplayer.style.justifyContent = "center";
@@ -307,12 +312,17 @@ class GameMenu {
 
         textContainer.appendChild(text);
 
+        //Create header
+        const spellsHeader = document.createElement("h1");
+        spellsHeader.innerText = "Select your Spells!";
+        this.gameCanvas.appendChild(spellsHeader);
+        
         //create spells container
         const spellDisplayer = document.createElement("div");
 
         //set its dimensions and display
         spellDisplayer.style.width = "100%";
-        spellDisplayer.style.height = "80%";
+        spellDisplayer.style.height = "60%";
         spellDisplayer.style.display = "flex";
         spellDisplayer.style.alignItems = "center";
         spellDisplayer.style.justifyContent = "center";
@@ -493,6 +503,8 @@ class GameMenu {
     }
 
     setNextLevelInfo() {
+        const maxEnemies = this.levelNumber > 5 ? 5 : this.levelNumber;
+
         const statusTitleElm = document.getElementById("status-header");
         statusTitleElm.innerText = `LEVEL ${this.levelNumber}`;
 
@@ -502,7 +514,7 @@ class GameMenu {
 
         - Deafeat ${this.levelNumber + 1} enemies to clear!
 
-        - Up to ${this.levelNumber} enemies to fight at a time!
+        - Up to ${maxEnemies} enemies to fight at a time!
 
         - If you clear it you will get ${this.levelNumber * 50} Exp Points!`;
 
@@ -545,6 +557,7 @@ class Level {
         this.player = new Player(this.canvasOnePercentWidth, this.canvasOnePercentHeight, 3, 1, 50, 50, [this.collidablesArr, this.solidCollidablesArr], 20, this.spellsArr, spellUpgradeArr, this.arrowsPressed, spellsInUse);
 
         //To track time to spawn enemies
+        this.spawnTime;
         this.spawnTimer = 0;
 
         //To set level settings
@@ -615,6 +628,8 @@ class Level {
 
         this.killGoal = this.levelNumber + 1;
 
+        this.spawnTime = ((2000 - (100 * this.levelNumber)) > 100) ? (2000 - (100 * this.levelNumber)) : 100;
+
         //Set Information panels
         this.setPlayerInfo();
         this.setStatusInfo();
@@ -650,7 +665,7 @@ class Level {
 
             //For enemy spawn
             this.spawnTimer += 16;
-            if(this.spawnTimer >= 2000 && this.enemiesArr.length < this.maxEnemies) {
+            if(this.spawnTimer >= this.spawnTime && this.enemiesArr.length < this.maxEnemies) {
                 this.placeEnemies(1);
                 this.spawnTimer = 0;
             }
@@ -1654,4 +1669,4 @@ class Collider {
 /***********************************************************************************************************************************************************************************/
 
 //const myLevel = new Level();
-const myGame = new GameMenu(2, 10000);
+const myGame = new GameMenu();
