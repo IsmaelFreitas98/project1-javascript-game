@@ -9,6 +9,8 @@
 - You can buy and upgrade spells using the Exp earned in cleared levels;
 - You can select up to 2 of your unlocked spells to use in the next level;
 
+![ScreenShot](./images/main-screenshot.png)
+
 ## How to play
 
 - Use the arrow keys to move your Auror;
@@ -27,4 +29,5 @@
 ## Disclaimer
 
 - Some of the images and names used in the game belong to the Harry Potter Franchise and I don't own them;
-- This project was done for education purposes only, and it is not intended to generate any kind of profit; 
+- This project was done for education purposes only, and it is not intended to generate any kind of profit;
+- Please don't sue me :)
