@@ -1122,7 +1122,7 @@ class Wizard extends GameObject {
             switch(this.spellsInUse[0].name) {
 
                 case "basic":
-                    const newBasic = new BasicSpell(this.canvasOnePercentWidth, this.canvasOnePercentHeight, 1.7, 1, (this.wandX / this.canvasOnePercentWidth), (this.wandY / this.canvasOnePercentHeight), [this.collidablesArr, this.spellsArr], 10, this.direction, this.spellUpgradeArr);
+                    const newBasic = new BasicSpell(this.canvasOnePercentWidth, this.canvasOnePercentHeight, 1.7, 1, (this.wandX / this.canvasOnePercentWidth), (this.wandY / this.canvasOnePercentHeight), [this.collidablesArr, this.spellsArr], 10, this.direction, this.spellUpgradeArr, false);
                     this.setCastCoolDownPrimary(newBasic);
                     break;
     
@@ -1151,7 +1151,7 @@ class Wizard extends GameObject {
                     this.setCastCoolDownPrimary(newDefault);
             }
         } else if(this.canShootPrimary) {
-            const newBasic = new BasicSpell(this.canvasOnePercentWidth, this.canvasOnePercentHeight, 1.7, 1, (this.wandX / this.canvasOnePercentWidth), (this.wandY / this.canvasOnePercentHeight), [this.collidablesArr, this.spellsArr], 10, this.direction, this.spellUpgradeArr);
+            const newBasic = new BasicSpell(this.canvasOnePercentWidth, this.canvasOnePercentHeight, 1.7, 1, (this.wandX / this.canvasOnePercentWidth), (this.wandY / this.canvasOnePercentHeight), [this.collidablesArr, this.spellsArr], 10, this.direction, this.spellUpgradeArr, true);
             this.setCastCoolDownPrimary(newBasic);
         }
     }
@@ -1162,7 +1162,7 @@ class Wizard extends GameObject {
             switch(this.spellsInUse[1].name) {
 
                 case "basic":
-                    const newBasic = new BasicSpell(this.canvasOnePercentWidth, this.canvasOnePercentHeight, 1.7, 1, (this.wandX / this.canvasOnePercentWidth), (this.wandY / this.canvasOnePercentHeight), [this.collidablesArr, this.spellsArr], 10, this.direction, this.spellUpgradeArr);
+                    const newBasic = new BasicSpell(this.canvasOnePercentWidth, this.canvasOnePercentHeight, 1.7, 1, (this.wandX / this.canvasOnePercentWidth), (this.wandY / this.canvasOnePercentHeight), [this.collidablesArr, this.spellsArr], 10, this.direction, this.spellUpgradeArr, false);
                     this.setCastCoolDownSecondary(newBasic);
                     break;
     
@@ -1187,7 +1187,7 @@ class Wizard extends GameObject {
                     break;
     
                 default:
-                    const newDefault = new BasicSpell(this.canvasOnePercentWidth, this.canvasOnePercentHeight, 1.7, 1, (this.wandX / this.canvasOnePercentWidth), (this.wandY / this.canvasOnePercentHeight), [this.collidablesArr, this.spellsArr], 10, this.direction, this.spellUpgradeArr);
+                    const newDefault = new BasicSpell(this.canvasOnePercentWidth, this.canvasOnePercentHeight, 1.7, 1, (this.wandX / this.canvasOnePercentWidth), (this.wandY / this.canvasOnePercentHeight), [this.collidablesArr, this.spellsArr], 10, this.direction, this.spellUpgradeArr, true);
                     this.setCastCoolDownSecondary(newDefault);
             }
         }
@@ -1411,9 +1411,6 @@ class Player extends Wizard {
         
         this.objectElm.appendChild(this.aim);
         this.setAimPointPosition();
-        console.log(this.direction);
-
-
     }
 
     setAimPointPosition() {
@@ -1749,7 +1746,7 @@ class Spell extends GameObject {
 
 class BasicSpell extends Spell {
 
-    constructor(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, relatedArrs, damage, direction, spellUpgradeArr) {
+    constructor(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, relatedArrs, damage, direction, spellUpgradeArr, isEnemy) {
         super(canvasOnePercentWidth, canvasOnePercentHeight, relativeWidth, widthHeightRatio, positionX, positionY, relatedArrs, damage, direction);
 
         this.image = "./images/basic.png";
@@ -1761,6 +1758,10 @@ class BasicSpell extends Spell {
         this.upgradeImprovement = 0.02;
         this.coolDown = (0.4 - this.upgradeImprovement * this.upgradeLevel).toFixed(2);
         this.damage = 20 + (2 * this.upgradeLevel);
+
+        if(isEnemy) {
+            this.damage = 20;
+        }
     }
 }
 
