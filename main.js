@@ -664,7 +664,7 @@ class Level {
 
         this.killGoal = this.levelNumber + 1;
 
-        this.spawnTime = ((2000 - (100 * this.levelNumber)) > 100) ? (2000 - (100 * this.levelNumber)) : 100;
+        this.spawnTime = ((2000 - (50 * this.levelNumber)) > 1500) ? (2000 - (50 * this.levelNumber)) : 1500;
 
         //Set Information panels
         this.setPlayerInfo();
