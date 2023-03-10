@@ -18,7 +18,7 @@ class GameMenu {
 
         this.basic = {name: "basic", power: 20, cooldown: 0.4, spellUpgrade: 0.02, upgradeCost: 20, upgradeArrPos: 0, maxLevel: 5, image: "./images/basic.png"};
         this.stupefy = {name: "stupefy", power: 25, cooldown: 0.8, spellUpgrade: 0.08, upgradeCost: 50, upgradeArrPos: 1, maxLevel: 5, cost: 100, image: "./images/stupefy.png"};
-        this.expelliarmus = {name: "expelliarmus", power: 35, cooldown: 1.2, spellUpgrade: 0.1, upgradeCost: 100, upgradeArrPos: 2, maxLevel: 5, cost: 500, image: "./images/expelliarmus.png"};
+        this.expelliarmus = {name: "expelliarmus", power: 40, cooldown: 1.2, spellUpgrade: 0.1, upgradeCost: 100, upgradeArrPos: 2, maxLevel: 5, cost: 500, image: "./images/expelliarmus.png"};
         this.reducto = {name: "reducto", power: 50, cooldown: 1.6, spellUpgrade: 0.15, upgradeCost: 170, upgradeArrPos: 3, maxLevel: 5, cost: 800, image: "./images/reducto.png"};
         this.avada = {name: "avada", power: 100, cooldown: 2, spellUpgrade: 0.2, upgradeCost: 250, upgradeArrPos: 4, maxLevel: 5, cost: 3000, image: "./images/avada.png"};
 
@@ -235,16 +235,15 @@ class GameMenu {
 
                 } else if(spell.maxLevel > this.spellUpgradeArr[spell.upgradeArrPos]){
                     const text = document.createElement("p");
-                    text.innerText = `UPGRADE COOLDOWN:
+                    text.innerText = `NEXT LEVEL: ${this.spellUpgradeArr[spell.upgradeArrPos] + 1}`;
 
-                    NEXT LEVEL: ${this.spellUpgradeArr[spell.upgradeArrPos] + 1}
-                    
-                    BEFORE: ${(spell.cooldown - spell.spellUpgrade * this.spellUpgradeArr[spell.upgradeArrPos]).toFixed(2)}s
-                    
-                    AFTER: ${(spell.cooldown - spell.spellUpgrade - spell.spellUpgrade * this.spellUpgradeArr[spell.upgradeArrPos]).toFixed(2)}s
+                    text.innerText += `
+
+                    POWER: ${spell.power + this.spellUpgradeArr[spell.upgradeArrPos] * 2} -> ${spell.power + (this.spellUpgradeArr[spell.upgradeArrPos] + 1) * 2}
+
+                    COOLDOWN: ${(spell.cooldown - spell.spellUpgrade * this.spellUpgradeArr[spell.upgradeArrPos]).toFixed(2)}s -> ${(spell.cooldown - spell.spellUpgrade - spell.spellUpgrade * this.spellUpgradeArr[spell.upgradeArrPos]).toFixed(2)}s
                     
                     COST: ${spell.upgradeCost}EXP`;
-
                     textContainer.appendChild(text);
 
                     const buyBtn = document.createElement("button");
@@ -262,7 +261,7 @@ class GameMenu {
                     
                     You are a master using ${spell.name.toUpperCase()}!!!
 
-                    POWER: ${spell.power}HP 
+                    POWER: ${spell.power + this.spellUpgradeArr[spell.upgradeArrPos] * 2}HP 
                     
                     COOLDOWN: ${(spell.cooldown - spell.spellUpgrade * this.spellUpgradeArr[spell.upgradeArrPos]).toFixed(2)}s`;
 
@@ -412,7 +411,7 @@ class GameMenu {
                 const text = document.createElement("p");
                 text.innerText = `LEVEL: ${this.spellUpgradeArr[spell.upgradeArrPos]}
                 
-                POWER: ${spell.power}HP
+                POWER: ${spell.power + this.spellUpgradeArr[spell.upgradeArrPos] * 2}HP
                 
                 COOLDOWN: ${(spell.cooldown - spell.spellUpgrade * this.spellUpgradeArr[spell.upgradeArrPos]).toFixed(2)}s`;
 
@@ -1761,7 +1760,7 @@ class BasicSpell extends Spell {
         this.upgradeLevel = spellUpgradeArr[0];
         this.upgradeImprovement = 0.02;
         this.coolDown = (0.4 - this.upgradeImprovement * this.upgradeLevel).toFixed(2);
-        this.damage = 20;
+        this.damage = 20 + (2 * this.upgradeLevel);
     }
 }
 
@@ -1778,7 +1777,7 @@ class Stupefy extends Spell {
         this.upgradeLevel = spellUpgradeArr[1];
         this.upgradeImprovement = 0.08;
         this.coolDown = (0.8 - this.upgradeImprovement * this.upgradeLevel).toFixed(2);
-        this.damage = 25;
+        this.damage = 25 + (2 * this.upgradeLevel);
     }
 }
 
@@ -1795,7 +1794,7 @@ class Expelliarmus extends Spell {
         this.upgradeLevel = spellUpgradeArr[2];
         this.upgradeImprovement = 0.1;
         this.coolDown = (1.2 - this.upgradeImprovement * this.upgradeLevel).toFixed(2);
-        this.damage = 35;
+        this.damage = 40 + (2 * this.upgradeLevel);
     }
 }
 
@@ -1812,7 +1811,7 @@ class Reducto extends Spell {
         this.upgradeLevel = spellUpgradeArr[3];
         this.upgradeImprovement = 0.15;
         this.coolDown = (1.6 - this.upgradeImprovement * this.upgradeLevel).toFixed(2);
-        this.damage = 50;
+        this.damage = 50 + (2 * this.upgradeLevel);
     }
 }
 
@@ -1829,7 +1828,7 @@ class Avada extends Spell {
         this.upgradeLevel = spellUpgradeArr[4];
         this.upgradeImprovement = 0.2;
         this.coolDown = (2 - this.upgradeImprovement * this.upgradeLevel).toFixed(2);
-        this.damage = 100;
+        this.damage = 100 + (2 * this.upgradeLevel);
     }
 }
 
