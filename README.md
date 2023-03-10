@@ -17,6 +17,11 @@
 - Press Z to cast your Primary Spell;
 - Press X to cast your Secondary Spell (wich is not available until you unlock and select a new spell);
 
+## Presentation
+
+- Find out more!
+[Click to See Presentation!](https://slides.com/d/GQZt0I8/live)
+
 ## Demo
 
 - Feel like trying it???
